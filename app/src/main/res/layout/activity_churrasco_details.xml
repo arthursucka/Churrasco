@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Exibir os detalhes do evento -->
+    <TextView
+        android:id="@+id/txtDetalhesEvento"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
+        android:text="@string/detalhes_do_evento"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- Título para os itens fornecidos -->
+    <TextView
+        android:id="@+id/txtTituloFornecidos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
+        android:text="@string/o_churrasqueiro_oferece"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <!-- Lista de Itens Fornecidos -->
+    <LinearLayout
+        android:id="@+id/fornecidosContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <!-- Botão para aceitar o convite -->
+    <Button
+        android:id="@+id/btnAceitar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/teal_700"
+        android:text="@string/aceitar_convite"
+        android:textColor="#000000"
+        tools:ignore="VisualLintButtonSize" />
+
+    <!-- Botão para declinar o convite -->
+    <Button
+        android:id="@+id/btnDeclinar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="@color/red"
+        android:text="@string/declinar_convite"
+        android:textColor="#000000"
+        tools:ignore="VisualLintButtonSize" />
+
+</LinearLayout>
+

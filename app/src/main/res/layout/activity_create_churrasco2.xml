@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Título da Tela -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/detalhes_do_churrasco"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Detalhes: Data, Hora e Local -->
+        <TextView
+            android:id="@+id/txtDetalhes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/detalhes_do_churrasco_aparecer_o_aqui"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Título dos Itens Fornecidos -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/itens_que_o_churrasqueiro_vai_fornecer"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Lista de Itens Fornecidos -->
+        <LinearLayout
+            android:id="@+id/fornecidosContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="vertical" />
+
+        <!-- Título dos Itens NÃO Fornecidos -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/itens_que_ficarao_a_cargo_dos_convidados"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Os itens não fornecidos serão adicionados dinamicamente -->
+        <LinearLayout
+            android:id="@+id/naoFornecidosContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp">
+        </LinearLayout>
+
+        <!-- Botão para Confirmar Churrasco -->
+        <Button
+            android:id="@+id/btnConfirmarChurrasco"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/confirmar_churrasco"
+            android:layout_marginTop="16dp" />
+    </LinearLayout>
+</ScrollView>
+

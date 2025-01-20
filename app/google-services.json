@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "120247742476",
+    "project_id": "churrasco-aa495",
+    "storage_bucket": "churrasco-aa495.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120247742476:android:c1733956fc00aca64a7e29",
+        "android_client_info": {
+          "package_name": "com.longynus.churrasco"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbsXiFwqrgZGlqla0WYSJx7wzr9PIqCZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Título do aplicativo -->
+        <TextView
+            android:id="@+id/txtTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bem-vindo ao Churrasco!"
+            android:textSize="24sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Botão para criar um churrasco -->
+        <Button
+            android:id="@+id/btnCriarChurrasco"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Criar Churrasco"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="@color/teal_200"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <!-- Botão para entrar em um churrasco -->
+        <Button
+            android:id="@+id/btnEntrarChurrasco"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Entrar em Churrasco"
+            android:backgroundTint="@color/teal_700"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+</ScrollView>
