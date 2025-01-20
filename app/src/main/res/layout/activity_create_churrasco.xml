@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Seletor de Data -->
+        <Button
+            android:id="@+id/btnDatePicker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/escolher_data"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Seletor de Hora -->
+        <Button
+            android:id="@+id/btnTimePicker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/escolher_hora"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Campo para inserir o local -->
+        <EditText
+            android:id="@+id/edtLocal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/digite_o_local_do_churrasco"
+            android:inputType="text"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Título para a lista de itens -->
+        <TextView
+            android:id="@+id/txtFornecidosTitulo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/selecione_os_itens_que_voce_ira_fornecer"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Container para os checkboxes -->
+        <LinearLayout
+            android:id="@+id/checkboxContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <CheckBox
+                android:id="@+id/chkCarvao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/carvao" />
+
+            <CheckBox
+                android:id="@+id/chkGelo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/gelo" />
+
+            <CheckBox
+                android:id="@+id/chkRefrigerante"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/refrigerante" />
+
+            <CheckBox
+                android:id="@+id/chkCerveja"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/cerveja" />
+
+            <CheckBox
+                android:id="@+id/chkDestilados"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/destilados" />
+
+            <CheckBox
+                android:id="@+id/chkLimao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/limao" />
+
+            <CheckBox
+                android:id="@+id/chkVinagrete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/vinagrete" />
+
+            <CheckBox
+                android:id="@+id/chkPao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pao" />
+
+            <CheckBox
+                android:id="@+id/chkSobremesa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/sobremesa" />
+
+            <CheckBox
+                android:id="@+id/chkCarneBovina"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/carne_bovina" />
+
+            <CheckBox
+                android:id="@+id/chkCarneSuina"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/carne_suina" />
+
+            <CheckBox
+                android:id="@+id/chkLinguica"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/linguica" />
+
+            <CheckBox
+                android:id="@+id/chkFrango"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/frango" />
+
+            <CheckBox
+                android:id="@+id/chkCoracao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/coracao" />
+
+            <CheckBox
+                android:id="@+id/chkPaoDeAlho"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/pao_de_alho" />
+
+            <CheckBox
+                android:id="@+id/chkQueijoCoalho"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/queijo_coalho" />
+
+            <CheckBox
+                android:id="@+id/chkQueijoProvolone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/queijo_provolone" />
+
+        </LinearLayout>
+
+        <!-- Botão Próximo -->
+        <Button
+            android:id="@+id/btnProximo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/proximo"
+            android:textSize="16sp"
+            android:backgroundTint="@color/teal_700"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>
