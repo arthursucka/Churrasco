@@ -30,7 +30,8 @@
         <!-- Tela principal (após login) -->
         <activity
             android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop" />
 
         <!-- Criar churrasco -->
         <activity
@@ -53,10 +54,12 @@
         <!-- Listagens -->
         <activity
             android:name=".ActiveChurrascosActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop" />
         <activity
             android:name=".PastChurrascosActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop" />
         <activity
             android:name=".ActiveChurrascoDetailsActivity"
             android:exported="false" />
@@ -64,7 +67,8 @@
         <!-- Convites pendentes -->
         <activity
             android:name=".PendingInvitesActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop" />
 
         <!-- Firebase Messaging Service -->
         <service

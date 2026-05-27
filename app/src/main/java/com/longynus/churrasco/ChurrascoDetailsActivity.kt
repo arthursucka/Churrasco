@@ -35,6 +35,7 @@ class ChurrascoDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_churrasco_details)
+        TopBarHelper.setup(this, getString(R.string.details_invite_title))
 
         rootLayout = findViewById(R.id.rootLayout)
         tvInfoBasic = findViewById(R.id.tvInfoBasic)

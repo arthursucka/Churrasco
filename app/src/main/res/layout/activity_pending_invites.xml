@@ -12,7 +12,7 @@
         android:paddingStart="24dp"
         android:paddingTop="28dp"
         android:paddingEnd="24dp"
-        android:paddingBottom="16dp">
+        android:paddingBottom="96dp">
 
         <TextView
             android:id="@+id/txtTitleInvites"
@@ -85,6 +85,17 @@
                 android:textSize="15sp" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/mainSurface"
+        app:itemIconTint="@color/mainPrimary"
+        app:itemTextColor="@color/mainPrimary"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/menu_bottom_navigation" />
 
     <FrameLayout
         android:id="@+id/connectionStateOverlay"

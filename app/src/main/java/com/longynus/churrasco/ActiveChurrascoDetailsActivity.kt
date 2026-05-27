@@ -31,6 +31,7 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_active_churrasco_details)
+        TopBarHelper.setup(this, getString(R.string.details_event_title))
 
         rootLayout = findViewById(R.id.rootLayout)
         creatorActionsContainer = findViewById(R.id.creatorActionsContainer)
@@ -83,12 +84,23 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
 
         btnSend.setOnClickListener {
             val text = edtMessage.text.toString().trim()
-            if (text.isNotEmpty()) {
-                chatRef.push().setValue(Message(userName, text))
-                edtMessage.text.clear()
-            } else {
+            if (text.isEmpty()) {
                 rootLayout.showSnackbar("Digite uma mensagem antes de enviar.")
+                return@setOnClickListener
             }
+
+            btnSend.isEnabled = false
+            chatRef.push().setValue(Message(userName, text))
+                .addOnSuccessListener {
+                    edtMessage.text.clear()
+                    btnSend.isEnabled = true
+                }
+                .addOnFailureListener {
+                    btnSend.isEnabled = true
+                    rootLayout.showErrorDialog(
+                        "Não conseguimos enviar a mensagem agora. Confira sua internet e tente de novo."
+                    )
+                }
         }
     }
 
@@ -172,7 +184,7 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         bindSimpleList(
             findViewById(R.id.containerConfirmed),
             churrasco.guestsConfirmed.map { "${it.name}: ${it.items.joinToString()}" },
-            "Nenhuma confirmacao ainda."
+            "Nenhuma confirmação ainda."
         )
 
         bindSimpleList(

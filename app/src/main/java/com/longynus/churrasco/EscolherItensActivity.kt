@@ -28,6 +28,7 @@ class EscolherItensActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_escolher_itens)
+        TopBarHelper.setup(this, getString(R.string.choose_items_title))
 
         rootLayout = findViewById(R.id.rootLayout)
         checkboxContainer = findViewById(R.id.checkboxContainer)
