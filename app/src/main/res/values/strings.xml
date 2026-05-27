@@ -72,6 +72,15 @@
     <string name="main_welcome_body">Crie um evento, acompanhe respostas e veja quem ficou respons&#225;vel por cada item.</string>
     <string name="main_section_actions">A&#231;&#245;es principais</string>
     <string name="main_section_account">Conta</string>
+    <string name="main_dashboard_title">Resumo r&#225;pido</string>
+    <string name="main_dashboard_body">Veja o que precisa da sua aten&#231;&#227;o agora.</string>
+    <string name="main_card_invites_title">Convites</string>
+    <string name="main_card_invites_body">Responda aos churrascos em que te chamaram.</string>
+    <string name="main_card_active_title">Ativos</string>
+    <string name="main_card_active_body">Acompanhe os churrascos que ainda v&#227;o acontecer.</string>
+    <string name="main_card_history_title">Hist&#243;rico</string>
+    <string name="main_card_history_body">Consulte os churrascos que j&#225; passaram.</string>
+    <string name="main_card_open">Abrir</string>
     <string name="main_pending_hint">Veja quem ainda precisa responder</string>
     <string name="main_active_hint">Acompanhe os encontros que ainda v&#227;o acontecer</string>
     <string name="main_past_hint">Consulte os churrascos que j&#225; passaram</string>
@@ -102,6 +111,11 @@
     <string name="details_creator_actions_title">&#193;rea do organizador</string>
     <string name="details_chat_title">Conversa do churrasco</string>
     <string name="details_chat_hint">Digite uma mensagem</string>
+    <string name="choose_items_title">Escolher itens</string>
+    <string name="nav_home">In&#237;cio</string>
+    <string name="nav_invites">Convites</string>
+    <string name="nav_active">Ativos</string>
+    <string name="nav_history">Hist&#243;rico</string>
 
     <string name="ola_usuario">Ol&#225;, usu&#225;rio!</string>
 

@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -16,9 +17,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var txtGreeting: TextView
     private lateinit var btnCreate: Button
-    private lateinit var btnActive: Button
-    private lateinit var btnPast: Button
-    private lateinit var btnPendingInvites: Button
+    private lateinit var btnActive: View
+    private lateinit var btnPast: View
+    private lateinit var btnPendingInvites: View
     private lateinit var btnSwitchUser: Button
 
     private lateinit var userName: String
@@ -48,6 +49,8 @@ class MainActivity : AppCompatActivity() {
         btnPendingInvites = findViewById(R.id.btnPendingInvites)
         btnSwitchUser = findViewById(R.id.btnSwitchUser)
 
+        BottomNavHelper.setup(this, R.id.nav_home)
+
         txtGreeting.text = getString(R.string.main_greeting, userName)
 
         btnCreate.setOnClickListener {
@@ -55,15 +58,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnPendingInvites.setOnClickListener {
-            startActivity(Intent(this, PendingInvitesActivity::class.java))
+            BottomNavHelper.openMainSection(this, PendingInvitesActivity::class.java, finishCurrent = true)
         }
 
         btnActive.setOnClickListener {
-            startActivity(Intent(this, ActiveChurrascosActivity::class.java))
+            BottomNavHelper.openMainSection(this, ActiveChurrascosActivity::class.java, finishCurrent = true)
         }
 
         btnPast.setOnClickListener {
-            startActivity(Intent(this, PastChurrascosActivity::class.java))
+            BottomNavHelper.openMainSection(this, PastChurrascosActivity::class.java, finishCurrent = true)
         }
 
         btnSwitchUser.setOnClickListener {

@@ -38,6 +38,7 @@ class CreateChurrascoActivity2 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_churrasco2)
+        TopBarHelper.setup(this, getString(R.string.create_review_title))
 
         rootLayout = findViewById(R.id.rootLayout)
         btnConfirmar = findViewById(R.id.btnConfirmarChurrasco)

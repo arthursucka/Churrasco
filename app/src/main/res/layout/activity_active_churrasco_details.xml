@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="24dp"
-        android:paddingTop="28dp"
+        android:paddingTop="92dp"
         android:paddingEnd="24dp"
         android:paddingBottom="24dp">
 
@@ -229,6 +229,17 @@
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="top"
+        android:background="@color/mainSurface"
+        app:menu="@menu/menu_top_home"
+        app:navigationIcon="@drawable/ic_top_back"
+        app:title="@string/details_event_title"
+        app:titleTextColor="@color/mainInk" />
 
     <FrameLayout
         android:id="@+id/loadingOverlay"

@@ -40,6 +40,7 @@ class PendingInvitesActivity : AppCompatActivity() {
         }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
+        BottomNavHelper.setup(this, R.id.nav_invites)
 
         fetchPendingInvites()
     }

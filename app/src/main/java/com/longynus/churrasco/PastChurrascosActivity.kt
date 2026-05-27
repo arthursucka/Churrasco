@@ -35,6 +35,7 @@ class PastChurrascosActivity : AppCompatActivity() {
         }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
+        BottomNavHelper.setup(this, R.id.nav_history)
 
         fetchPastChurrascos()
     }

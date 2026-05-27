@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="@color/splashIconBackground"
+        android:pathData="M54,12a42,42 0,1 0,0.1 0z" />
+    <path
+        android:fillColor="#E8D9B8"
+        android:pathData="M22,70c8,12 19,18 32,18s24,-6 32,-18z" />
+    <path
+        android:fillColor="@color/splashCharcoal"
+        android:pathData="M27,50h54v7h-54z" />
+    <path
+        android:fillColor="@color/splashCharcoal"
+        android:pathData="M32,57h44c-2,15 -11,24 -22,24s-20,-9 -22,-24z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M34,48h40M38,43h32M42,38h24" />
+    <path
+        android:fillColor="@color/splashFlame"
+        android:pathData="M54,25c10,9 13,16 9,22c-2,4 -6,6 -10,6c-7,0 -12,-5 -12,-12c0,-6 5,-10 8,-17c1,5 3,8 5,10c1,-3 1,-6 0,-9z" />
+    <path
+        android:fillColor="@color/splashFlameLight"
+        android:pathData="M55,38c4,4 5,7 3,10c-1,2 -3,3 -5,3c-3,0 -6,-3 -6,-6c0,-3 3,-5 5,-9c0,2 1,4 3,5z" />
+    <path
+        android:strokeColor="@color/splashCharcoal"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M40,79l-5,11M68,79l5,11M54,81v11" />
+</vector>

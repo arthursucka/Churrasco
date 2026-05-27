@@ -1,0 +1,17 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "churrascos": {
+      "$churrascoId": {
+        "messages": {
+          ".read": true,
+          "$messageId": {
+            ".write": true,
+            ".validate": "newData.hasChildren(['sender', 'text', 'timestamp']) && newData.child('sender').isString() && newData.child('sender').val().length > 0 && newData.child('sender').val().length <= 60 && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 500 && newData.child('timestamp').isNumber()"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/mainBackground">
 
     <!-- Conteúdo principal: ScrollView com instruções, checkboxes e botão -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:clipToPadding="false"
+        android:paddingStart="24dp"
+        android:paddingTop="92dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -40,6 +46,17 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="top"
+        android:background="@color/mainSurface"
+        app:menu="@menu/menu_top_home"
+        app:navigationIcon="@drawable/ic_top_back"
+        app:title="@string/choose_items_title"
+        app:titleTextColor="@color/mainInk" />
 
     <FrameLayout
         android:id="@+id/connectionStateOverlay"
