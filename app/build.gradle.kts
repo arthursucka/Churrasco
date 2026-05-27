@@ -1,9 +1,9 @@
 plugins {
     id("com.android.application")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
     id("org.jetbrains.kotlin.android")
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -13,8 +13,8 @@ android {
     defaultConfig {
         applicationId = "com.longynus.churrasco"
         minSdk = 21
-        //noinspection EditedTargetSdkVersion,OldTargetApi
         targetSdk = 35
+
         versionCode = 1
         versionName = "1.0"
 
@@ -31,19 +31,17 @@ android {
         }
     }
 
-    kotlinOptions {
-        jvmTarget = "20"
-    }
-
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_20
-        targetCompatibility = JavaVersion.VERSION_20
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     buildFeatures {
         compose = true
     }
-
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.2"
     }
@@ -54,38 +52,47 @@ android {
 }
 
 dependencies {
+    // AndroidX Core & AppCompat
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+
+    // Material Components para Views (precisa para TextInputLayout/TextInputEditText)
     implementation(libs.material)
+    implementation (libs.material3)
+
+    // ConstraintLayout, RecyclerView, VectorDrawable, Lifecycle
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.vectordrawable)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose.v172)
-    implementation (libs.androidx.appcompat)
-    implementation (libs.androidx.core.ktx)
+
+    // Retrofit + Gson
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // OkHttp + Logging
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+
+    // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.activity.compose)
     implementation(libs.ui)
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
-    implementation(libs.androidx.constraintlayout)
-    implementation(libs.androidx.ui.graphics)
 
-    // Firebase dependencies
+    // Firebase (Messaging, Crashlytics, Realtime DB)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.crashlytics.ktx)
-    implementation(libs.google.firebase.crashlytics.ktx)
+    implementation(libs.firebase.database.ktx)
 
-    // OkHttp dependencies
-    implementation(libs.okhttp) // Adiciona a biblioteca OkHttp
-    implementation(libs.logging.interceptor) // Opcional: para logs de requisição
-    implementation (libs.okhttp.v4100)
-
-    // Test dependencies
-    androidTestImplementation(platform(libs.androidx.compose.bom))
+    // Debug / Test
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
-    androidTestImplementation(libs.androidx.junit.v115)
-    androidTestImplementation(libs.androidx.espresso.core.v351)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.junit)
 }
-

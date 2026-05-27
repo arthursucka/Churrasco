@@ -23,19 +23,18 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/details_invite_title"
+                android:text="@string/details_event_title"
                 android:textColor="@color/mainInk"
                 android:textSize="30sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvInviteStatus"
+                android:id="@+id/txtUserRole"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_create_chip"
                 android:padding="12dp"
-                android:text="Convite recebido"
                 android:textColor="@color/mainPrimaryDark"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -49,11 +48,11 @@
                 android:padding="18dp">
 
                 <TextView
-                    android:id="@+id/tvInfoBasic"
+                    android:id="@+id/txtDetalhesEvento"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="4dp"
-                    android:text="Data, hora e local"
+                    android:text="Criador - Data - Hora - Local"
                     android:textColor="@color/mainInk"
                     android:textSize="17sp"
                     android:textStyle="bold" />
@@ -76,7 +75,7 @@
                     android:textStyle="bold" />
 
                 <LinearLayout
-                    android:id="@+id/containerProvided"
+                    android:id="@+id/fornecidosContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -132,7 +131,37 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/inviteActionsContainer"
+                android:id="@+id/creatorActionsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_create_section"
+                android:orientation="vertical"
+                android:padding="18dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/details_creator_actions_title"
+                    android:textColor="@color/mainInk"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCancelChurrasco"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="14dp"
+                    android:text="Cancelar churrasco"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
+                    android:textSize="15sp"
+                    app:backgroundTint="@color/mainDanger"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -143,37 +172,60 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/details_actions_title"
+                    android:text="@string/details_chat_title"
                     android:textColor="@color/mainInk"
                     android:textSize="19sp"
                     android:textStyle="bold" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnAceitar"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvChat"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="14dp"
-                    android:text="Aceitar convite"
-                    android:textAllCaps="false"
-                    android:textColor="@android:color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/mainPrimary"
-                    app:cornerRadius="8dp" />
+                    android:layout_height="220dp"
+                    android:layout_marginTop="12dp"
+                    android:overScrollMode="always" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDeclinar"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="Recusar convite"
-                    android:textAllCaps="false"
-                    android:textColor="@color/mainDanger"
-                    android:textSize="15sp"
-                    app:cornerRadius="8dp"
-                    app:strokeColor="@color/mainDanger"
-                    app:strokeWidth="1dp" />
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="@string/details_chat_hint"
+                        app:boxCornerRadiusBottomEnd="8dp"
+                        app:boxCornerRadiusBottomStart="8dp"
+                        app:boxCornerRadiusTopEnd="8dp"
+                        app:boxCornerRadiusTopStart="8dp"
+                        app:boxStrokeColor="@color/mainPrimary"
+                        app:hintTextColor="@color/mainPrimary">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtMessage"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences"
+                            android:maxLines="3"
+                            android:textColor="@color/mainInk"
+                            android:textSize="15sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSend"
+                        style="@style/Widget.Material3.Button.Icon"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:layout_marginStart="8dp"
+                        android:contentDescription="@string/cd_send_message"
+                        android:tint="@android:color/white"
+                        app:backgroundTint="@color/mainPrimary"
+                        app:cornerRadius="8dp"
+                        app:icon="@drawable/ic_send"
+                        app:iconGravity="textStart"
+                        app:iconPadding="0dp" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
