@@ -1,173 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/mainBackground"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="28dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp">
 
-        <!-- Seletor de Data -->
-        <Button
-            android:id="@+id/btnDatePicker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/escolher_data"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Seletor de Hora -->
-        <Button
-            android:id="@+id/btnTimePicker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/escolher_hora"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Campo para inserir o local -->
-        <EditText
-            android:id="@+id/edtLocal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/digite_o_local_do_churrasco"
-            android:inputType="text"
-            android:textSize="16sp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- Título para a lista de itens -->
         <TextView
-            android:id="@+id/txtFornecidosTitulo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/selecione_os_itens_que_voce_ira_fornecer"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:text="@string/create_title"
+            android:textColor="@color/mainInk"
+            android:textSize="30sp"
+            android:textStyle="bold" />
 
-        <!-- Container para os checkboxes -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/create_subtitle"
+            android:textColor="@color/mainMuted"
+            android:textSize="15sp" />
+
         <LinearLayout
-            android:id="@+id/checkboxContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_create_section"
+            android:orientation="vertical"
+            android:padding="18dp">
 
-            <CheckBox
-                android:id="@+id/chkCarvao"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/carvao" />
+                android:text="@string/create_when_title"
+                android:textColor="@color/mainInk"
+                android:textSize="19sp"
+                android:textStyle="bold" />
 
-            <CheckBox
-                android:id="@+id/chkGelo"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/gelo" />
+                android:layout_marginTop="4dp"
+                android:text="@string/create_when_hint"
+                android:textColor="@color/mainMuted"
+                android:textSize="14sp" />
 
-            <CheckBox
-                android:id="@+id/chkRefrigerante"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDatePicker"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/refrigerante" />
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/escolher_data"
+                android:textAllCaps="false"
+                android:textColor="@color/mainPrimaryDark"
+                android:textSize="16sp"
+                app:cornerRadius="8dp"
+                app:strokeColor="@color/mainStroke"
+                app:strokeWidth="1dp" />
 
-            <CheckBox
-                android:id="@+id/chkCerveja"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTimePicker"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/cerveja" />
-
-            <CheckBox
-                android:id="@+id/chkDestilados"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/destilados" />
-
-            <CheckBox
-                android:id="@+id/chkLimao"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/limao" />
-
-            <CheckBox
-                android:id="@+id/chkVinagrete"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/vinagrete" />
-
-            <CheckBox
-                android:id="@+id/chkPao"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pao" />
-
-            <CheckBox
-                android:id="@+id/chkSobremesa"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/sobremesa" />
-
-            <CheckBox
-                android:id="@+id/chkCarneBovina"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/carne_bovina" />
-
-            <CheckBox
-                android:id="@+id/chkCarneSuina"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/carne_suina" />
-
-            <CheckBox
-                android:id="@+id/chkLinguica"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/linguica" />
-
-            <CheckBox
-                android:id="@+id/chkFrango"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/frango" />
-
-            <CheckBox
-                android:id="@+id/chkCoracao"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/coracao" />
-
-            <CheckBox
-                android:id="@+id/chkPaoDeAlho"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/pao_de_alho" />
-
-            <CheckBox
-                android:id="@+id/chkQueijoCoalho"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/queijo_coalho" />
-
-            <CheckBox
-                android:id="@+id/chkQueijoProvolone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/queijo_provolone" />
-
+                android:layout_height="52dp"
+                android:layout_marginTop="10dp"
+                android:text="@string/escolher_hora"
+                android:textAllCaps="false"
+                android:textColor="@color/mainPrimaryDark"
+                android:textSize="16sp"
+                app:cornerRadius="8dp"
+                app:strokeColor="@color/mainStroke"
+                app:strokeWidth="1dp" />
         </LinearLayout>
 
-        <!-- Botão Próximo -->
-        <Button
-            android:id="@+id/btnProximo"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/proximo"
-            android:textSize="16sp"
-            android:backgroundTint="@color/teal_700"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_create_section"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/create_where_title"
+                android:textColor="@color/mainInk"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/create_where_hint"
+                android:textColor="@color/mainMuted"
+                android:textSize="14sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/digite_o_local_do_churrasco"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp"
+                app:boxStrokeColor="@color/mainPrimary"
+                app:hintTextColor="@color/mainPrimary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edtLocal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapSentences"
+                    android:maxLines="2"
+                    android:textColor="@color/mainInk"
+                    android:textColorHint="@color/mainMuted"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_create_section"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:id="@+id/txtFornecidosTitulo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/create_items_title"
+                android:textColor="@color/mainInk"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/create_items_hint"
+                android:textColor="@color/mainMuted"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:id="@+id/checkboxContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnProximo"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="20dp"
+            android:text="@string/create_next_button"
+            android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:layout_marginTop="16dp" />
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/mainPrimary"
+            app:cornerRadius="8dp" />
 
     </LinearLayout>
 </ScrollView>

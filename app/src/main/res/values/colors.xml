@@ -11,4 +11,16 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="red">#FF1000</color>
+    <color name="surfaceSoft">#F5F7F6</color>
+    <color name="textSecondary">#666666</color>
+    <color name="mainBackground">#F7F8F5</color>
+    <color name="mainInk">#18201C</color>
+    <color name="mainMuted">#66736D</color>
+    <color name="mainPrimary">#167A55</color>
+    <color name="mainPrimaryDark">#0E5C40</color>
+    <color name="mainAccentSoft">#FFF0D6</color>
+    <color name="mainSurface">#FFFFFF</color>
+    <color name="mainStroke">#DDE5E0</color>
+    <color name="mainDanger">#B42318</color>
+    <color name="mainDangerSoft">#FFF1F0</color>
 </resources>

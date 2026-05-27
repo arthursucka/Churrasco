@@ -1,48 +1,252 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/mainBackground">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-        <!-- Título do aplicativo -->
-        <TextView
-            android:id="@+id/txtTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Bem-vindo ao Churrasco!"
-            android:textSize="24sp"
-            android:textColor="@color/black"
-            android:textStyle="bold"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="28dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="24dp">
+
+            <TextView
+                android:id="@+id/txtTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/main_title"
+                android:textColor="@color/mainInk"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtGreeting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/ola_usuario"
+                android:textColor="@color/mainMuted"
+                android:textSize="17sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_main_header"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_welcome_title"
+                    android:textColor="@color/mainInk"
+                    android:textSize="21sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/main_welcome_body"
+                    android:textColor="@color/mainMuted"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCreateChurrasco"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/main_primary_action"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/mainPrimary"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:text="@string/main_section_actions"
+                android:textColor="@color/mainInk"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_main_action_panel"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPendingInvites"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="@string/convites_pendentes"
+                    android:textAllCaps="false"
+                    android:textColor="@color/mainPrimaryDark"
+                    android:textSize="15sp"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/mainStroke"
+                    app:strokeWidth="1dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="@string/main_pending_hint"
+                    android:textColor="@color/mainMuted"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnActiveChurrascos"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="@string/churrascos_ativos"
+                    android:textAllCaps="false"
+                    android:textColor="@color/mainPrimaryDark"
+                    android:textSize="15sp"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/mainStroke"
+                    app:strokeWidth="1dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="@string/main_active_hint"
+                    android:textColor="@color/mainMuted"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPastChurrascos"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:text="@string/churrascos_passados"
+                    android:textAllCaps="false"
+                    android:textColor="@color/mainPrimaryDark"
+                    android:textSize="15sp"
+                    app:cornerRadius="8dp"
+                    app:strokeColor="@color/mainStroke"
+                    app:strokeWidth="1dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/main_past_hint"
+                    android:textColor="@color/mainMuted"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="26dp"
+                android:text="@string/main_section_account"
+                android:textColor="@color/mainInk"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSwitchUser"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/trocar_usuario"
+                android:textAllCaps="false"
+                android:textColor="@color/mainMuted"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/connectionStateOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/mainBackground"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:gravity="center"
-            android:layout_marginBottom="32dp" />
+            android:orientation="vertical">
 
-        <!-- Botão para criar um churrasco -->
-        <Button
-            android:id="@+id/btnCriarChurrasco"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Criar Churrasco"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="@color/teal_200"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
+            <TextView
+                android:id="@+id/txtConnectionTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/connection_state_title"
+                android:textColor="@color/mainInk"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-        <!-- Botão para entrar em um churrasco -->
-        <Button
-            android:id="@+id/btnEntrarChurrasco"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Entrar em Churrasco"
-            android:backgroundTint="@color/teal_700"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
+            <TextView
+                android:id="@+id/txtConnectionMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/connection_state_message"
+                android:textColor="@color/mainInk"
+                android:textSize="16sp" />
 
-    </LinearLayout>
-</ScrollView>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRetryConnection"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="24dp"
+                android:text="@string/connection_state_retry"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                app:backgroundTint="@color/mainPrimary"
+                app:cornerRadius="8dp" />
+
+        </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+</FrameLayout>

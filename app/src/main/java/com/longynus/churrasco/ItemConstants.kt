@@ -1,25 +1,28 @@
-import com.longynus.churrasco.R
+package com.longynus.churrasco
 
+/**
+ * Lista centralizada de todos os itens possíveis de um churrasco.
+ * Usada para criar dinamicamente os CheckBox em CreateChurrascoActivity1
+ * e para filtrar quais ainda faltam em EscolherItensActivity.
+ */
 object ItemConstants {
-    data class Item(val checkboxId: Int, val label: String)
-
-    val listaCompletaDeItens = listOf(
-        Item(R.id.chkCarvao, "Carvão"),
-        Item(R.id.chkGelo, "Gelo"),
-        Item(R.id.chkRefrigerante, "Refrigerante"),
-        Item(R.id.chkCerveja, "Cerveja"),
-        Item(R.id.chkDestilados, "Destilados"),
-        Item(R.id.chkLimao, "Limão"),
-        Item(R.id.chkVinagrete, "Vinagrete"),
-        Item(R.id.chkPao, "Pão"),
-        Item(R.id.chkSobremesa, "Sobremesa"),
-        Item(R.id.chkCarneBovina, "Carne Bovina"),
-        Item(R.id.chkCarneSuina, "Carne Suína"),
-        Item(R.id.chkLinguica, "Linguiça"),
-        Item(R.id.chkFrango, "Frango"),
-        Item(R.id.chkCoracao, "Coração"),
-        Item(R.id.chkPaoDeAlho, "Pão de Alho"),
-        Item(R.id.chkQueijoCoalho, "Queijo Coalho"),
-        Item(R.id.chkQueijoProvolone, "Queijo Provolone")
+    val listaCompletaDeItens: List<String> = listOf(
+        "Carvão",
+        "Gelo",
+        "Refrigerante",
+        "Cerveja",
+        "Destilados",
+        "Limão",
+        "Vinagrete",
+        "Pão",
+        "Sobremesa",
+        "Carne Bovina",
+        "Carne Suína",
+        "Linguiça",
+        "Frango",
+        "Coração",
+        "Pão de Alho",
+        "Queijo Coalho",
+        "Queijo Provolone"
     )
 }
