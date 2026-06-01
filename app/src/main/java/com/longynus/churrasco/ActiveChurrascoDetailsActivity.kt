@@ -4,15 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.ChildEventListener
@@ -23,6 +20,7 @@ import com.longynus.churrasco.adapter.ChatAdapter
 import com.longynus.churrasco.model.ChatMessageRequest
 import com.longynus.churrasco.model.Churrasco
 import com.longynus.churrasco.model.Message
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -40,10 +38,10 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         setContentView(R.layout.activity_active_churrasco_details)
         TopBarHelper.setup(this, getString(R.string.details_event_title))
         BottomNavHelper.setup(this, R.id.nav_active)
+        KeyboardInsetsHelper.setup(this, hideBottomNavigation = true)
 
         rootLayout = findViewById(R.id.rootLayout)
         creatorActionsContainer = findViewById(R.id.creatorActionsContainer)
@@ -67,7 +65,6 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         }
 
         setupChat()
-        setupKeyboardBehavior()
         fetchChurrascoDetails()
     }
 
@@ -140,10 +137,7 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
                         edtMessage.text.clear()
                         rootLayout.showSnackbar("Mensagem enviada.")
                     } else {
-                        rootLayout.showErrorDialog(
-                            response.body()?.message
-                                ?: "Nao conseguimos enviar a mensagem agora. Tente de novo."
-                        )
+                        rootLayout.showErrorDialog(chatErrorMessage(response))
                     }
                 }
 
@@ -156,14 +150,17 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             })
     }
 
-    private fun setupKeyboardBehavior() {
-        val bottomNavigation = findViewById<View>(R.id.bottomNavigation)
-        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
-            val keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
-            bottomNavigation.visibility = if (keyboardVisible) View.GONE else View.VISIBLE
-            insets
+    private fun chatErrorMessage(response: Response<ApiResponse<Any>>): String {
+        response.body()?.message?.let { return it }
+
+        val rawError = response.errorBody()?.string().orEmpty()
+        if (rawError.isNotBlank()) {
+            runCatching {
+                JSONObject(rawError).optString("message")
+            }.getOrNull()?.takeIf { it.isNotBlank() }?.let { return it }
         }
-        ViewCompat.requestApplyInsets(rootLayout)
+
+        return "Nao conseguimos enviar a mensagem agora. Tente de novo."
     }
 
     private fun scrollToChatInput(scrollView: ScrollView) {

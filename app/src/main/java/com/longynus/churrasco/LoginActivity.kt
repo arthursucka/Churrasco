@@ -28,6 +28,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+        KeyboardInsetsHelper.setup(this)
 
         rootLayout = findViewById(R.id.rootLayout)
         loadingOverlay = findViewById(R.id.loadingOverlay)

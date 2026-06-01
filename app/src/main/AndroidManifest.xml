@@ -29,7 +29,8 @@
 
         <activity
             android:name=".LoginActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Tela principal (após login) -->
         <activity
@@ -40,7 +41,8 @@
         <!-- Criar churrasco -->
         <activity
             android:name=".CreateChurrascoActivity1"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".CreateChurrascoActivity2"
             android:exported="false" />
