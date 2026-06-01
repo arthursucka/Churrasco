@@ -36,7 +36,13 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             ?: data["body"]
             ?: "Você foi convidado!"
 
-        val intent = Intent(this, ChurrascoDetailsActivity::class.java).apply {
+        val targetActivity = if (data["type"] == "chat_message") {
+            ActiveChurrascoDetailsActivity::class.java
+        } else {
+            ChurrascoDetailsActivity::class.java
+        }
+
+        val intent = Intent(this, targetActivity).apply {
             putExtra("churrascoId", churrascoId)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }

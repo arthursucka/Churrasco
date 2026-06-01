@@ -1,31 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#167A55</color>
-    <color name="colorPrimaryDark">#0E5C40</color>
-    <color name="colorAccent">#FFB84D</color>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Material 3 product palette: light mode -->
+    <color name="md_primary">#C9471A</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#FFDAD0</color>
+    <color name="md_on_primary_container">#3A0A00</color>
+    <color name="md_secondary">#7A4A2A</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#FFDCC4</color>
+    <color name="md_on_secondary_container">#2D1607</color>
+    <color name="md_tertiary">#DFA632</color>
+    <color name="md_on_tertiary">#3A2600</color>
+    <color name="md_background">#FFFBF8</color>
+    <color name="md_on_background">#241A16</color>
+    <color name="md_surface">#FFF8F3</color>
+    <color name="md_on_surface">#241A16</color>
+    <color name="md_on_surface_variant">#5D4036</color>
+    <color name="md_outline">#8C7468</color>
+    <color name="md_outline_variant">#E7D3CA</color>
+
+    <!-- Semantic colors: light mode -->
+    <color name="success">#2F7D32</color>
+    <color name="success_container">#D8F2D1</color>
+    <color name="warning">#B86E00</color>
+    <color name="warning_container">#FFE1B3</color>
+    <color name="error">#BA1A1A</color>
+    <color name="error_container">#FFDAD6</color>
+    <color name="info">#27638A</color>
+    <color name="info_container">#CBE6FF</color>
+
+    <!-- Legacy aliases kept so existing layouts inherit the official palette. -->
+    <color name="colorPrimary">@color/md_primary</color>
+    <color name="colorPrimaryDark">#8F2E12</color>
+    <color name="colorAccent">@color/md_tertiary</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="red">#FF1000</color>
-    <color name="surfaceSoft">#F5F7F6</color>
-    <color name="textSecondary">#666666</color>
-    <color name="mainBackground">#F7F8F5</color>
-    <color name="mainInk">#18201C</color>
-    <color name="mainMuted">#66736D</color>
-    <color name="mainPrimary">#167A55</color>
-    <color name="mainPrimaryDark">#0E5C40</color>
-    <color name="mainAccentSoft">#FFF0D6</color>
-    <color name="mainSurface">#FFFFFF</color>
-    <color name="mainStroke">#DDE5E0</color>
-    <color name="mainDanger">#B42318</color>
-    <color name="mainDangerSoft">#FFF1F0</color>
-    <color name="splashBackground">#0E5C40</color>
-    <color name="splashIconBackground">#FFF0D6</color>
-    <color name="splashCharcoal">#18201C</color>
-    <color name="splashFlame">#F97316</color>
-    <color name="splashFlameLight">#FFD166</color>
+    <color name="red">@color/error</color>
+    <color name="surfaceSoft">@color/md_secondary_container</color>
+    <color name="textSecondary">@color/md_on_surface_variant</color>
+    <color name="mainBackground">@color/md_background</color>
+    <color name="mainInk">@color/md_on_background</color>
+    <color name="mainMuted">@color/md_on_surface_variant</color>
+    <color name="mainPrimary">@color/md_primary</color>
+    <color name="mainPrimaryDark">@color/colorPrimaryDark</color>
+    <color name="mainAccentSoft">@color/md_primary_container</color>
+    <color name="mainSurface">@color/md_surface</color>
+    <color name="mainStroke">@color/md_outline_variant</color>
+    <color name="mainDanger">@color/error</color>
+    <color name="mainDangerSoft">@color/error_container</color>
+
+    <!-- Splash and icon aliases. -->
+    <color name="splashBackground">@color/md_primary</color>
+    <color name="splashIconBackground">@color/md_surface</color>
+    <color name="splashCharcoal">@color/md_on_background</color>
+    <color name="splashEmber">@color/md_tertiary</color>
+    <color name="splashEmberDark">@color/colorPrimaryDark</color>
+    <color name="splashFlame">@color/md_tertiary</color>
+    <color name="splashFlameLight">@color/md_primary_container</color>
+
+    <!-- Deprecated Android template colors retained for old generated files. -->
+    <color name="purple_200">@color/md_primary_container</color>
+    <color name="purple_500">@color/md_primary</color>
+    <color name="purple_700">@color/colorPrimaryDark</color>
+    <color name="teal_200">@color/md_tertiary</color>
+    <color name="teal_700">@color/md_primary</color>
 </resources>

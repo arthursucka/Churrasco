@@ -27,6 +27,9 @@ data class Churrasco(
     /** Nome do criador do churrasco */
     val createdBy: String,
 
+    /** Usuarios convidados para este churrasco. */
+    val invitedUsers: List<String> = emptyList(),
+
     /**
      * Lista de todos os itens que já foram fornecidos:
      * tanto pelo criador quanto pelos convidados.

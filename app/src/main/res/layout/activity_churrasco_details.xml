@@ -7,13 +7,14 @@
     android:background="@color/mainBackground">
 
     <ScrollView
+        android:id="@+id/detailsScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="24dp"
-        android:paddingTop="92dp"
+        android:paddingTop="96dp"
         android:paddingEnd="24dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="112dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -21,6 +22,7 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/tvDetailsTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/details_invite_title"
@@ -29,21 +31,46 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvInviteStatus"
+                android:id="@+id/tvDetailsSubtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_create_chip"
-                android:padding="12dp"
-                android:text="Convite recebido"
-                android:textColor="@color/mainPrimaryDark"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="6dp"
+                android:text="Veja o combinado e responda se vai participar."
+                android:textColor="@color/mainMuted"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:id="@+id/statusCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_status_warning"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvInviteStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Aguardando resposta"
+                    android:textColor="@color/mainInk"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvStatusDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Aceite para escolher o que vai levar."
+                    android:textColor="@color/mainMuted"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_create_section"
                 android:orientation="vertical"
                 android:padding="18dp">
@@ -70,7 +97,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/details_items_title"
+                    android:text="Já garantido"
                     android:textColor="@color/mainInk"
                     android:textSize="19sp"
                     android:textStyle="bold" />
@@ -94,7 +121,31 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/details_confirmed_title"
+                    android:text="O que precisa levar"
+                    android:textColor="@color/mainInk"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/containerMissingItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_create_section"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Quem vai"
                     android:textColor="@color/mainInk"
                     android:textSize="19sp"
                     android:textStyle="bold" />
@@ -118,7 +169,31 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/details_declined_title"
+                    android:text="Quem leva o que"
+                    android:textColor="@color/mainInk"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/containerAssignedItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_create_section"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Recusaram"
                     android:textColor="@color/mainInk"
                     android:textSize="19sp"
                     android:textStyle="bold" />
@@ -141,6 +216,7 @@
                 android:padding="18dp">
 
                 <TextView
+                    android:id="@+id/tvActionsTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/details_actions_title"
@@ -149,17 +225,31 @@
                     android:textStyle="bold" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenChat"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="14dp"
+                    android:text="Abrir conversa"
+                    android:textAllCaps="false"
+                    android:textColor="@color/md_on_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    app:backgroundTint="@color/mainPrimary"
+                    app:cornerRadius="16dp" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnAceitar"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="14dp"
-                    android:text="Aceitar convite"
+                    android:text="Vou participar"
                     android:textAllCaps="false"
-                    android:textColor="@android:color/white"
+                    android:textColor="@color/md_on_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     app:backgroundTint="@color/mainPrimary"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="16dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDeclinar"
@@ -167,11 +257,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:layout_marginTop="10dp"
-                    android:text="Recusar convite"
+                    android:text="Não vou"
                     android:textAllCaps="false"
                     android:textColor="@color/mainDanger"
                     android:textSize="15sp"
-                    app:cornerRadius="8dp"
+                    app:cornerRadius="16dp"
                     app:strokeColor="@color/mainDanger"
                     app:strokeWidth="1dp" />
             </LinearLayout>
@@ -181,13 +271,24 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/topToolbar"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="56dp"
         android:layout_gravity="top"
         android:background="@color/mainSurface"
         app:menu="@menu/menu_top_home"
         app:navigationIcon="@drawable/ic_top_back"
         app:title="@string/details_invite_title"
         app:titleTextColor="@color/mainInk" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom"
+        android:background="@color/mainSurface"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/menu_bottom_navigation" />
 
     <FrameLayout
         android:id="@+id/loadingOverlay"

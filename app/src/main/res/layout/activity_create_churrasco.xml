@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
@@ -73,7 +73,7 @@
                 android:textAllCaps="false"
                 android:textColor="@color/mainPrimaryDark"
                 android:textSize="16sp"
-                app:cornerRadius="8dp"
+                app:cornerRadius="16dp"
                 app:strokeColor="@color/mainStroke"
                 app:strokeWidth="1dp" />
 
@@ -87,7 +87,7 @@
                 android:textAllCaps="false"
                 android:textColor="@color/mainPrimaryDark"
                 android:textSize="16sp"
-                app:cornerRadius="8dp"
+                app:cornerRadius="16dp"
                 app:strokeColor="@color/mainStroke"
                 app:strokeWidth="1dp" />
         </LinearLayout>
@@ -180,11 +180,11 @@
             android:layout_marginTop="20dp"
             android:text="@string/create_next_button"
             android:textAllCaps="false"
-            android:textColor="@android:color/white"
+            android:textColor="@color/md_on_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             app:backgroundTint="@color/mainPrimary"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="16dp" />
 
     </LinearLayout>
     </ScrollView>
@@ -200,3 +200,4 @@
         app:title="@string/create_title"
         app:titleTextColor="@color/mainInk" />
 </FrameLayout>
+

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:padding="24dp">
 
-    <!-- Título -->
+    <!-- TÃ­tulo -->
     <TextView
         android:id="@+id/tvJoinTitle"
         android:layout_width="0dp"
@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Instrução -->
+    <!-- InstruÃ§Ã£o -->
     <TextView
         android:id="@+id/tvJoinInstruction"
         android:layout_width="0dp"
@@ -42,14 +42,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp"/>
 
-    <!-- Botão Entrar -->
+    <!-- BotÃ£o Entrar -->
     <Button
         android:id="@+id/btnEntrar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Entrar"
-        android:backgroundTint="@color/teal_700"
-        android:textColor="@android:color/white"
+        android:backgroundTint="@color/md_primary"
+        android:textColor="@color/md_on_primary"
         app:layout_constraintTop_toBottomOf="@id/edtUserName"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -74,3 +74,4 @@
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

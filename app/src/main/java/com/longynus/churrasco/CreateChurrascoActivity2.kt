@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.longynus.churrasco.model.CreateChurrascoRequest
 import com.longynus.churrasco.model.CreateChurrascoResponse
@@ -264,6 +265,11 @@ class CreateChurrascoActivity2 : AppCompatActivity() {
 
                     val resp = response.body()
                     if (response.isSuccessful && resp?.success == true && !resp.id.isNullOrBlank()) {
+                        Toast.makeText(
+                            this@CreateChurrascoActivity2,
+                            "Churrasco criado!",
+                            Toast.LENGTH_LONG
+                        ).show()
                         val intent = Intent(this@CreateChurrascoActivity2, ActiveChurrascoDetailsActivity::class.java)
                         intent.putExtra("churrascoId", resp.id)
                         intent.putExtra("createdBy", userName)
