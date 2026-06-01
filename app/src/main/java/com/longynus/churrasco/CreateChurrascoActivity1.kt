@@ -29,6 +29,7 @@ class CreateChurrascoActivity1 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_churrasco)
         TopBarHelper.setup(this, getString(R.string.create_title))
+        KeyboardInsetsHelper.setup(this)
 
         val btnDatePicker: Button = findViewById(R.id.btnDatePicker)
         val btnTimePicker: Button = findViewById(R.id.btnTimePicker)
