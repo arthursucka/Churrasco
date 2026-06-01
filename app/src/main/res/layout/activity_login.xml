@@ -13,25 +13,51 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:orientation="vertical"
             android:paddingStart="24dp"
-            android:paddingTop="36dp"
+            android:paddingTop="32dp"
             android:paddingEnd="24dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="32dp">
+
+            <FrameLayout
+                android:layout_width="112dp"
+                android:layout_height="112dp"
+                android:background="@drawable/bg_login_logo_badge">
+
+                <ImageView
+                    android:layout_width="84dp"
+                    android:layout_height="84dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/app_name"
+                    android:src="@drawable/splash_symbol" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/main_title"
+                android:layout_marginTop="22dp"
+                android:gravity="center"
+                android:text="@string/app_name"
                 android:textColor="@color/mainInk"
-                android:textSize="32sp"
+                android:textSize="36sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/app_tagline"
+                android:textColor="@color/mainMuted"
+                android:textSize="17sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="34dp"
                 android:background="@drawable/bg_login_panel"
                 android:orientation="vertical"
                 android:padding="20dp">
@@ -59,10 +85,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
                     android:hint="@string/login_field_label"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusTopStart="8dp"
+                    app:boxBackgroundColor="@color/mainBackground"
+                    app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
                     app:boxStrokeColor="@color/mainPrimary"
                     app:hintTextColor="@color/mainPrimary">
 
@@ -71,8 +98,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="@string/login_field_hint"
-                        android:inputType="textPersonName"
+                        android:inputType="textPersonName|textCapWords"
                         android:maxLines="1"
+                        android:minHeight="56dp"
                         android:textColor="@color/mainInk"
                         android:textColorHint="@color/mainMuted"
                         android:textSize="16sp" />
@@ -81,15 +109,15 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLogin"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
+                    android:layout_height="58dp"
                     android:layout_marginTop="18dp"
                     android:text="@string/login_button"
                     android:textAllCaps="false"
-                    android:textColor="@android:color/white"
+                    android:textColor="@color/md_on_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     app:backgroundTint="@color/mainPrimary"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="18dp" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -148,9 +176,9 @@
                 android:layout_marginTop="24dp"
                 android:text="@string/connection_state_retry"
                 android:textAllCaps="false"
-                android:textColor="@android:color/white"
+                android:textColor="@color/md_on_primary"
                 app:backgroundTint="@color/mainPrimary"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
     </FrameLayout>

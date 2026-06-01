@@ -6,15 +6,14 @@
     android:layout_height="match_parent"
     android:background="@color/mainBackground">
 
-    <!-- Conteúdo principal: ScrollView com instruções, checkboxes e botão -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="24dp"
-        android:paddingTop="92dp"
+        android:paddingTop="96dp"
         android:paddingEnd="24dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="112dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -22,27 +21,75 @@
             android:orientation="vertical">
 
             <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="O que você vai levar?"
+                android:textColor="@color/mainInk"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <TextView
                 android:id="@+id/txtInstrucoes"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/escolha_o_que_voce_pretende_levar_para_o_churrasco"
-                android:textSize="18sp"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginTop="6dp"
+                android:text="Marque os itens que você consegue garantir para o churrasco."
+                android:textColor="@color/mainMuted"
+                android:textSize="15sp" />
 
             <LinearLayout
-                android:id="@+id/checkboxContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_status_warning"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <Button
-                android:id="@+id/btnConfirmar"
+                <TextView
+                    android:id="@+id/txtAvailableCount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Itens disponíveis"
+                    android:textColor="@color/mainInk"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Se algum item já foi escolhido por outra pessoa, ele sai da lista antes de confirmar."
+                    android:textColor="@color/mainMuted"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:backgroundTint="@color/teal_700"
-                android:text="@string/confirmar"
-                android:textColor="#FFFFFF" />
+                android:background="@drawable/bg_create_section"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:id="@+id/checkboxContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConfirmar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="18dp"
+                android:text="Confirmar presença"
+                android:textAllCaps="false"
+                android:textColor="@color/md_on_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/mainPrimary"
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
     </ScrollView>
@@ -50,7 +97,7 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/topToolbar"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="56dp"
         android:layout_gravity="top"
         android:background="@color/mainSurface"
         app:menu="@menu/menu_top_home"
@@ -62,7 +109,7 @@
         android:id="@+id/connectionStateOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/white"
+        android:background="@color/md_on_primary"
         android:padding="24dp"
         android:visibility="gone">
 
@@ -79,7 +126,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/connection_state_title"
-                android:textColor="@color/black"
+                android:textColor="@color/md_on_surface"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -91,7 +138,7 @@
                 android:gravity="center"
                 android:lineSpacingExtra="4dp"
                 android:text="@string/connection_state_message"
-                android:textColor="@color/black"
+                android:textColor="@color/md_on_surface"
                 android:textSize="16sp" />
 
             <Button
@@ -99,20 +146,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:backgroundTint="@color/teal_700"
+                android:backgroundTint="@color/md_primary"
                 android:text="@string/connection_state_retry"
-                android:textColor="@android:color/white" />
+                android:textColor="@color/md_on_primary" />
 
         </LinearLayout>
     </FrameLayout>
 
-    <!-- Overlay de loading -->
     <FrameLayout
         android:id="@+id/loadingOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#80000000">
+        android:background="#80000000"
+        android:visibility="gone">
 
         <ProgressBar
             android:layout_width="48dp"

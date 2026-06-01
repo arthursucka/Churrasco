@@ -2,11 +2,14 @@ package com.longynus.churrasco
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.messaging.FirebaseMessaging
 import com.longynus.churrasco.model.Churrasco
@@ -20,6 +23,7 @@ class EscolherItensActivity : AppCompatActivity() {
     private lateinit var rootLayout: View
     private lateinit var checkboxContainer: LinearLayout
     private lateinit var btnConfirmar: Button
+    private lateinit var txtAvailableCount: TextView
 
     private lateinit var churrascoId: String
     private lateinit var userName: String
@@ -33,6 +37,7 @@ class EscolherItensActivity : AppCompatActivity() {
         rootLayout = findViewById(R.id.rootLayout)
         checkboxContainer = findViewById(R.id.checkboxContainer)
         btnConfirmar = findViewById(R.id.btnConfirmar)
+        txtAvailableCount = findViewById(R.id.txtAvailableCount)
 
         churrascoId = intent.getStringExtra("churrascoId")
             ?: run {
@@ -48,7 +53,7 @@ class EscolherItensActivity : AppCompatActivity() {
             .orEmpty()
 
         if (itensNaoFornecidos.isEmpty()) {
-            showNoItemsAndFinish()
+            showNoItemsAndConfirm()
             return
         }
 
@@ -58,7 +63,7 @@ class EscolherItensActivity : AppCompatActivity() {
             val selecionados = selectedItems()
 
             if (selecionados.isEmpty()) {
-                rootLayout.showSnackbar("Escolha pelo menos um item para levar.")
+                confirmWithoutItems()
             } else {
                 validateItemsAndSend(selecionados)
             }
@@ -66,13 +71,30 @@ class EscolherItensActivity : AppCompatActivity() {
     }
 
     private fun bindAvailableItems(items: List<String>) {
+        val uniqueItems = items.distinct()
+
         checkboxes.clear()
         checkboxContainer.removeAllViews()
+        txtAvailableCount.text = if (uniqueItems.size == 1) {
+            "1 item disponivel"
+        } else {
+            "${uniqueItems.size} itens disponiveis"
+        }
 
-        items.distinct().forEach { label ->
+        uniqueItems.forEach { label ->
             CheckBox(this).apply {
                 text = label
                 textSize = 16f
+                setTextColor(getColor(R.color.mainInk))
+                background = getDrawable(R.drawable.bg_create_chip)
+                buttonTintList = ColorStateList.valueOf(getColor(R.color.mainPrimary))
+                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = 8.dp()
+                }
                 checkboxes.add(this)
                 checkboxContainer.addView(this)
             }
@@ -100,7 +122,7 @@ class EscolherItensActivity : AppCompatActivity() {
                     if (!response.isSuccessful || response.body()?.success != true || churrasco == null) {
                         rootLayout.hideLoading()
                         btnConfirmar.isEnabled = true
-                        rootLayout.showErrorDialog("Não conseguimos atualizar os itens disponíveis.")
+                        rootLayout.showErrorDialog("Nao conseguimos atualizar os itens disponiveis.")
                         return
                     }
 
@@ -109,16 +131,16 @@ class EscolherItensActivity : AppCompatActivity() {
                         .filterNot { it in unavailableItems }
                         .distinct()
 
-                    if (stillAvailableSelectedItems.isEmpty()) {
+                    if (selectedItems.isNotEmpty() && stillAvailableSelectedItems.isEmpty()) {
                         rootLayout.hideLoading()
                         btnConfirmar.isEnabled = true
                         refreshAvailableItems(unavailableItems)
-                        rootLayout.showErrorDialog("Esses itens já foram assumidos por outra pessoa. Escolha outro item disponível.")
+                        rootLayout.showErrorDialog("Esses itens ja foram assumidos por outra pessoa. Escolha outro item disponivel.")
                         return
                     }
 
                     if (stillAvailableSelectedItems.size < selectedItems.size) {
-                        rootLayout.showSnackbar("Alguns itens já foram assumidos e foram removidos da sua seleção.")
+                        rootLayout.showSnackbar("Alguns itens ja foram assumidos e foram removidos da sua selecao.")
                     }
 
                     enviarPresenca(stillAvailableSelectedItems)
@@ -128,7 +150,7 @@ class EscolherItensActivity : AppCompatActivity() {
                     rootLayout.hideLoading()
                     btnConfirmar.isEnabled = true
                     rootLayout.showConnectionState(
-                        "Não conseguimos atualizar os itens disponíveis agora. Confira sua internet e tente de novo."
+                        "Nao conseguimos atualizar os itens disponiveis agora. Confira sua internet e tente de novo."
                     ) {
                         validateItemsAndSend(selectedItems)
                     }
@@ -141,7 +163,7 @@ class EscolherItensActivity : AppCompatActivity() {
             .filterNot { it in unavailableItems }
 
         if (availableItems.isEmpty()) {
-            showNoItemsAndFinish()
+            showNoItemsAndConfirm()
         } else {
             bindAvailableItems(availableItems)
         }
@@ -167,10 +189,15 @@ class EscolherItensActivity : AppCompatActivity() {
                         FirebaseMessaging.getInstance()
                             .unsubscribeFromTopic("churrasco_$churrascoId")
 
-                        rootLayout.showSnackbar("Presença confirmada!")
+                        Toast.makeText(
+                            this@EscolherItensActivity,
+                            confirmationMessage(selectedItems),
+                            Toast.LENGTH_LONG
+                        ).show()
 
                         startActivity(
-                            Intent(this@EscolherItensActivity, ActiveChurrascosActivity::class.java)
+                            Intent(this@EscolherItensActivity, ActiveChurrascoDetailsActivity::class.java)
+                                .putExtra("churrascoId", churrascoId)
                                 .apply {
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 }
@@ -178,7 +205,7 @@ class EscolherItensActivity : AppCompatActivity() {
                     } else {
                         AlertDialog.Builder(this@EscolherItensActivity)
                             .setTitle("Ops")
-                            .setMessage("Não conseguimos confirmar sua presença agora. Tente novamente.")
+                            .setMessage(response.body()?.message ?: "Nao conseguimos confirmar sua presenca agora. Tente novamente.")
                             .setPositiveButton("OK") { _, _ -> finish() }
                             .setCancelable(false)
                             .show()
@@ -189,7 +216,7 @@ class EscolherItensActivity : AppCompatActivity() {
                     rootLayout.hideLoading()
                     btnConfirmar.isEnabled = true
                     rootLayout.showConnectionState(
-                        "Não conseguimos confirmar sua presença agora. Confira sua internet e tente de novo."
+                        "Nao conseguimos confirmar sua presenca agora. Confira sua internet e tente de novo."
                     ) {
                         enviarPresenca(selectedItems)
                     }
@@ -197,12 +224,30 @@ class EscolherItensActivity : AppCompatActivity() {
             })
     }
 
-    private fun showNoItemsAndFinish() {
+    private fun confirmWithoutItems() {
         AlertDialog.Builder(this)
-            .setTitle("Ops")
-            .setMessage("Não há itens disponíveis para escolher agora.")
-            .setPositiveButton("OK") { _, _ -> finish() }
-            .setCancelable(false)
+            .setTitle("Confirmar sem item?")
+            .setMessage("Voce pode confirmar presenca agora e combinar os detalhes pelo chat.")
+            .setPositiveButton("Confirmar") { _, _ -> validateItemsAndSend(emptyList()) }
+            .setNegativeButton("Voltar", null)
             .show()
     }
+
+    private fun confirmationMessage(selectedItems: List<String>): String {
+        if (selectedItems.isEmpty()) return "Convite aceito!"
+
+        val itemsText = selectedItems.joinToString(", ")
+        return "Voce escolheu levar: $itemsText"
+    }
+
+    private fun showNoItemsAndConfirm() {
+        AlertDialog.Builder(this)
+            .setTitle("Tudo ja foi combinado")
+            .setMessage("Nao ha itens faltando agora. Quer confirmar sua presenca mesmo assim?")
+            .setPositiveButton("Confirmar presenca") { _, _ -> enviarPresenca(emptyList()) }
+            .setNegativeButton("Agora nao") { _, _ -> finish() }
+            .show()
+    }
+
+    private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
 }

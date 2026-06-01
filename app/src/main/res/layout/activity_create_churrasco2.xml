@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
@@ -175,11 +175,11 @@
             android:enabled="false"
             android:text="@string/confirmar_churrasco"
             android:textAllCaps="false"
-            android:textColor="@android:color/white"
+            android:textColor="@color/md_on_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             app:backgroundTint="@color/mainPrimary"
-            app:cornerRadius="8dp" />
+            app:cornerRadius="16dp" />
     </LinearLayout>
 
     <FrameLayout
@@ -225,9 +225,9 @@
                 android:layout_marginTop="24dp"
                 android:text="@string/connection_state_retry"
                 android:textAllCaps="false"
-                android:textColor="@android:color/white"
+                android:textColor="@color/md_on_primary"
                 app:backgroundTint="@color/mainPrimary"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
     </FrameLayout>
@@ -239,3 +239,4 @@
         android:background="#88000000"
         android:visibility="gone" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
+

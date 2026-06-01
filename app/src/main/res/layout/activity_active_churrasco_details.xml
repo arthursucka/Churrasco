@@ -7,13 +7,14 @@
     android:background="@color/mainBackground">
 
     <ScrollView
+        android:id="@+id/detailsScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingStart="24dp"
-        android:paddingTop="92dp"
+        android:paddingTop="96dp"
         android:paddingEnd="24dp"
-        android:paddingBottom="24dp">
+        android:paddingBottom="112dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -28,21 +29,36 @@
                 android:textSize="30sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/txtUserRole"
+            <LinearLayout
+                android:id="@+id/statusCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_create_chip"
-                android:padding="12dp"
-                android:textColor="@color/mainPrimaryDark"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_status_info"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/txtUserRole"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/mainInk"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvStatusDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/mainMuted"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_create_section"
                 android:orientation="vertical"
                 android:padding="18dp">
@@ -58,6 +74,19 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnJumpToChat"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:text="Abrir conversa"
+                android:textAllCaps="false"
+                android:textColor="@color/md_on_primary"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/mainPrimary"
+                app:cornerRadius="16dp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -69,13 +98,13 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/details_items_title"
+                    android:text="Já garantido"
                     android:textColor="@color/mainInk"
                     android:textSize="19sp"
                     android:textStyle="bold" />
 
                 <LinearLayout
-                    android:id="@+id/fornecidosContainer"
+                    android:id="@+id/containerProvided"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -93,7 +122,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/details_confirmed_title"
+                    android:text="Quem vai"
                     android:textColor="@color/mainInk"
                     android:textSize="19sp"
                     android:textStyle="bold" />
@@ -117,7 +146,55 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/details_declined_title"
+                    android:text="Quem leva o que"
+                    android:textColor="@color/mainInk"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/containerAssignedItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_create_section"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ainda falta"
+                    android:textColor="@color/mainInk"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:id="@+id/containerMissingItems"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_create_section"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Recusaram"
                     android:textColor="@color/mainInk"
                     android:textSize="19sp"
                     android:textStyle="bold" />
@@ -155,13 +232,14 @@
                     android:layout_marginTop="14dp"
                     android:text="Cancelar churrasco"
                     android:textAllCaps="false"
-                    android:textColor="@android:color/white"
+                    android:textColor="@color/md_on_primary"
                     android:textSize="15sp"
                     app:backgroundTint="@color/mainDanger"
-                    app:cornerRadius="8dp" />
+                    app:cornerRadius="16dp" />
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/chatSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -177,12 +255,39 @@
                     android:textSize="19sp"
                     android:textStyle="bold" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvChat"
+                <TextView
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"
-                    android:layout_marginTop="12dp"
-                    android:overScrollMode="always" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Combine detalhes com quem ja confirmou presenca."
+                    android:textColor="@color/mainMuted"
+                    android:textSize="14sp" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="260dp"
+                    android:layout_marginTop="12dp">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvChat"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipToPadding="false"
+                        android:overScrollMode="never"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/txtChatEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:lineSpacingExtra="4dp"
+                        android:padding="24dp"
+                        android:text="Conversem aqui sobre o churrasco."
+                        android:textColor="@color/mainMuted"
+                        android:textSize="15sp" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -195,10 +300,11 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/details_chat_hint"
-                        app:boxCornerRadiusBottomEnd="8dp"
-                        app:boxCornerRadiusBottomStart="8dp"
-                        app:boxCornerRadiusTopEnd="8dp"
-                        app:boxCornerRadiusTopStart="8dp"
+                        app:boxBackgroundColor="@color/mainBackground"
+                        app:boxCornerRadiusBottomEnd="16dp"
+                        app:boxCornerRadiusBottomStart="16dp"
+                        app:boxCornerRadiusTopEnd="16dp"
+                        app:boxCornerRadiusTopStart="16dp"
                         app:boxStrokeColor="@color/mainPrimary"
                         app:hintTextColor="@color/mainPrimary">
 
@@ -206,8 +312,11 @@
                             android:id="@+id/edtMessage"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:minHeight="52dp"
                             android:inputType="textCapSentences"
                             android:maxLines="3"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="12dp"
                             android:textColor="@color/mainInk"
                             android:textSize="15sp" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -219,9 +328,9 @@
                         android:layout_height="52dp"
                         android:layout_marginStart="8dp"
                         android:contentDescription="@string/cd_send_message"
-                        android:tint="@android:color/white"
+                        android:tint="@color/md_on_primary"
                         app:backgroundTint="@color/mainPrimary"
-                        app:cornerRadius="8dp"
+                        app:cornerRadius="16dp"
                         app:icon="@drawable/ic_send"
                         app:iconGravity="textStart"
                         app:iconPadding="0dp" />
@@ -233,13 +342,24 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/topToolbar"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="56dp"
         android:layout_gravity="top"
         android:background="@color/mainSurface"
         app:menu="@menu/menu_top_home"
         app:navigationIcon="@drawable/ic_top_back"
         app:title="@string/details_event_title"
         app:titleTextColor="@color/mainInk" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_gravity="bottom"
+        android:background="@color/mainSurface"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/menu_bottom_navigation" />
 
     <FrameLayout
         android:id="@+id/loadingOverlay"

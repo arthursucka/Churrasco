@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
@@ -92,8 +92,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/mainSurface"
-        app:itemIconTint="@color/mainPrimary"
-        app:itemTextColor="@color/mainPrimary"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/menu_bottom_navigation" />
 
@@ -140,9 +140,9 @@
                 android:layout_marginTop="24dp"
                 android:text="@string/connection_state_retry"
                 android:textAllCaps="false"
-                android:textColor="@android:color/white"
+                android:textColor="@color/md_on_primary"
                 app:backgroundTint="@color/mainPrimary"
-                app:cornerRadius="8dp" />
+                app:cornerRadius="16dp" />
 
         </LinearLayout>
     </FrameLayout>
@@ -160,3 +160,4 @@
             android:layout_gravity="center" />
     </FrameLayout>
 </FrameLayout>
+

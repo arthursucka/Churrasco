@@ -4,11 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.ChildEventListener
@@ -16,8 +20,12 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.longynus.churrasco.adapter.ChatAdapter
+import com.longynus.churrasco.model.ChatMessageRequest
 import com.longynus.churrasco.model.Churrasco
 import com.longynus.churrasco.model.Message
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class ActiveChurrascoDetailsActivity : AppCompatActivity() {
 
@@ -27,15 +35,21 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     private lateinit var btnCancelChurrasco: Button
     private lateinit var creatorActionsContainer: LinearLayout
     private lateinit var txtUserRole: TextView
+    private lateinit var tvStatusDescription: TextView
+    private lateinit var statusCard: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         setContentView(R.layout.activity_active_churrasco_details)
         TopBarHelper.setup(this, getString(R.string.details_event_title))
+        BottomNavHelper.setup(this, R.id.nav_active)
 
         rootLayout = findViewById(R.id.rootLayout)
         creatorActionsContainer = findViewById(R.id.creatorActionsContainer)
         txtUserRole = findViewById(R.id.txtUserRole)
+        tvStatusDescription = findViewById(R.id.tvStatusDescription)
+        statusCard = findViewById(R.id.statusCard)
 
         churrascoId = intent.getStringExtra("churrascoId") ?: run {
             finish()
@@ -48,28 +62,47 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         btnCancelChurrasco = findViewById<Button>(R.id.btnCancelChurrasco).apply {
             setOnClickListener { deleteChurrasco() }
         }
+        findViewById<Button>(R.id.btnJumpToChat).setOnClickListener {
+            scrollToChatSection()
+        }
 
         setupChat()
+        setupKeyboardBehavior()
         fetchChurrascoDetails()
     }
 
     private fun setupChat() {
+        val scrollView = findViewById<ScrollView>(R.id.detailsScrollView)
         val rvChat = findViewById<RecyclerView>(R.id.rvChat)
+        val txtChatEmpty = findViewById<TextView>(R.id.txtChatEmpty)
         val edtMessage = findViewById<EditText>(R.id.edtMessage)
         val btnSend = findViewById<Button>(R.id.btnSend)
         val chatRef = FirebaseDatabase
             .getInstance()
             .getReference("churrascos/$churrascoId/messages")
-        val chatAdapter = ChatAdapter()
+        val chatAdapter = ChatAdapter(userName)
 
-        rvChat.layoutManager = LinearLayoutManager(this)
+        rvChat.layoutManager = LinearLayoutManager(this).apply {
+            stackFromEnd = true
+        }
         rvChat.adapter = chatAdapter
+        txtChatEmpty.visibility = View.VISIBLE
+
+        edtMessage.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) scrollToChatInput(scrollView)
+        }
+        edtMessage.setOnClickListener {
+            scrollToChatInput(scrollView)
+        }
 
         chatRef.addChildEventListener(object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 snapshot.getValue(Message::class.java)?.let { msg ->
                     chatAdapter.addMessage(msg)
-                    rvChat.scrollToPosition(chatAdapter.itemCount - 1)
+                    txtChatEmpty.visibility = if (chatAdapter.isEmpty) View.VISIBLE else View.GONE
+                    rvChat.post {
+                        rvChat.smoothScrollToPosition(chatAdapter.itemCount - 1)
+                    }
                 }
             }
 
@@ -78,7 +111,7 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
 
             override fun onCancelled(error: DatabaseError) {
-                rootLayout.showErrorDialog("Não conseguimos carregar a conversa agora.")
+                rootLayout.showErrorDialog("Nao conseguimos carregar a conversa agora.")
             }
         })
 
@@ -89,18 +122,61 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            btnSend.isEnabled = false
-            chatRef.push().setValue(Message(userName, text))
-                .addOnSuccessListener {
-                    edtMessage.text.clear()
+            sendChatMessage(text, btnSend, edtMessage)
+        }
+    }
+
+    private fun sendChatMessage(text: String, btnSend: Button, edtMessage: EditText) {
+        btnSend.isEnabled = false
+        RetrofitClient.instance
+            .sendChatMessage(churrascoId, ChatMessageRequest(text))
+            .enqueue(object : Callback<ApiResponse<Any>> {
+                override fun onResponse(
+                    call: Call<ApiResponse<Any>>,
+                    response: Response<ApiResponse<Any>>
+                ) {
                     btnSend.isEnabled = true
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        edtMessage.text.clear()
+                        rootLayout.showSnackbar("Mensagem enviada.")
+                    } else {
+                        rootLayout.showErrorDialog(
+                            response.body()?.message
+                                ?: "Nao conseguimos enviar a mensagem agora. Tente de novo."
+                        )
+                    }
                 }
-                .addOnFailureListener {
+
+                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
                     btnSend.isEnabled = true
                     rootLayout.showErrorDialog(
-                        "Não conseguimos enviar a mensagem agora. Confira sua internet e tente de novo."
+                        "Nao conseguimos enviar a mensagem agora. Confira sua internet e tente de novo."
                     )
                 }
+            })
+    }
+
+    private fun setupKeyboardBehavior() {
+        val bottomNavigation = findViewById<View>(R.id.bottomNavigation)
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
+            val keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
+            bottomNavigation.visibility = if (keyboardVisible) View.GONE else View.VISIBLE
+            insets
+        }
+        ViewCompat.requestApplyInsets(rootLayout)
+    }
+
+    private fun scrollToChatInput(scrollView: ScrollView) {
+        scrollView.postDelayed({
+            scrollView.smoothScrollTo(0, scrollView.getChildAt(0).bottom)
+        }, 250)
+    }
+
+    private fun scrollToChatSection() {
+        val scrollView = findViewById<ScrollView>(R.id.detailsScrollView)
+        val chatSection = findViewById<View>(R.id.chatSection)
+        scrollView.post {
+            scrollView.smoothScrollTo(0, chatSection.top)
         }
     }
 
@@ -108,10 +184,10 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         rootLayout.showLoading()
         RetrofitClient.instance
             .deleteChurrasco(churrascoId)
-            .enqueue(object : retrofit2.Callback<ApiResponse<Any>> {
+            .enqueue(object : Callback<ApiResponse<Any>> {
                 override fun onResponse(
-                    call: retrofit2.Call<ApiResponse<Any>>,
-                    response: retrofit2.Response<ApiResponse<Any>>
+                    call: Call<ApiResponse<Any>>,
+                    response: Response<ApiResponse<Any>>
                 ) {
                     rootLayout.hideLoading()
                     if (response.isSuccessful && response.body()?.success == true) {
@@ -121,13 +197,17 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
                                 .apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK }
                         )
                     } else {
-                        rootLayout.showErrorDialog("Não conseguimos cancelar o churrasco agora. Tente novamente.")
+                        rootLayout.showErrorDialog(
+                            "Nao conseguimos cancelar o churrasco agora. Tente novamente."
+                        )
                     }
                 }
 
-                override fun onFailure(call: retrofit2.Call<ApiResponse<Any>>, t: Throwable) {
+                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
                     rootLayout.hideLoading()
-                    rootLayout.showErrorDialog("Não conseguimos cancelar o churrasco agora. Confira sua internet e tente de novo.")
+                    rootLayout.showErrorDialog(
+                        "Nao conseguimos cancelar o churrasco agora. Confira sua internet e tente de novo."
+                    )
                 }
             })
     }
@@ -136,55 +216,78 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         rootLayout.showLoading()
         RetrofitClient.instance
             .getChurrasco(churrascoId)
-            .enqueue(object : retrofit2.Callback<ApiResponse<Churrasco>> {
+            .enqueue(object : Callback<ApiResponse<Churrasco>> {
                 override fun onResponse(
-                    call: retrofit2.Call<ApiResponse<Churrasco>>,
-                    response: retrofit2.Response<ApiResponse<Churrasco>>
+                    call: Call<ApiResponse<Churrasco>>,
+                    response: Response<ApiResponse<Churrasco>>
                 ) {
                     rootLayout.hideLoading()
                     val body = response.body()
                     if (response.isSuccessful && body?.success == true && body.churrasco != null) {
                         populateDetails(body.churrasco)
                     } else {
-                        rootLayout.showErrorDialog(body?.message ?: "Não conseguimos carregar os detalhes.")
+                        rootLayout.showErrorDialog(
+                            body?.message ?: "Nao conseguimos carregar os detalhes."
+                        )
                     }
                 }
 
-                override fun onFailure(call: retrofit2.Call<ApiResponse<Churrasco>>, t: Throwable) {
+                override fun onFailure(call: Call<ApiResponse<Churrasco>>, t: Throwable) {
                     rootLayout.hideLoading()
-                    rootLayout.showErrorDialog("Não conseguimos carregar os detalhes agora. Confira sua internet e tente de novo.")
+                    rootLayout.showErrorDialog(
+                        "Nao conseguimos carregar os detalhes agora. Confira sua internet e tente de novo."
+                    )
                 }
             })
     }
 
     private fun populateDetails(churrasco: Churrasco) {
         val isCreator = churrasco.createdBy == userName
+        val isConfirmed = churrasco.guestsConfirmed.any { it.name == userName }
 
         creatorActionsContainer.visibility = if (isCreator) View.VISIBLE else View.GONE
-        txtUserRole.text = if (isCreator) {
-            "Você é o organizador deste churrasco."
+        if (isCreator) {
+            statusCard.setBackgroundResource(R.drawable.bg_status_info)
+            txtUserRole.text = "Voce e o organizador"
+            tvStatusDescription.text = "Acompanhe quem vai, quem leva cada item e converse com o grupo."
+        } else if (isConfirmed) {
+            statusCard.setBackgroundResource(R.drawable.bg_status_success)
+            txtUserRole.text = "Voce confirmou presenca"
+            tvStatusDescription.text = "Confira os combinados e use o chat para alinhar detalhes."
         } else {
-            "Você está acompanhando este churrasco como participante."
+            statusCard.setBackgroundResource(R.drawable.bg_status_warning)
+            txtUserRole.text = "Aguardando resposta"
+            tvStatusDescription.text = "Responda ao convite antes de participar da conversa."
         }
 
-        findViewById<TextView>(R.id.txtDetalhesEvento).text = getString(
-            R.string.evento_data_hora_local,
-            churrasco.createdBy,
-            ChurrascoDateUtils.normalizeDate(churrasco.churrascoDate),
-            ChurrascoDateUtils.normalizeTime(churrasco.hora),
-            churrasco.local
-        )
+        findViewById<TextView>(R.id.txtDetalhesEvento).text = buildString {
+            append("Criado por: ${churrasco.createdBy}\n")
+            append("Quando: ${ChurrascoDateUtils.eventDateTime(churrasco.churrascoDate, churrasco.hora)}\n")
+            append("Onde: ${churrasco.local}")
+        }
 
         bindSimpleList(
-            findViewById(R.id.fornecidosContainer),
-            churrasco.fornecidosAgregados,
-            "Nenhum item garantido ainda."
+            findViewById(R.id.containerProvided),
+            buildProvidedByCreatorRows(churrasco),
+            "Nenhum item garantido pelo organizador."
         )
 
         bindSimpleList(
             findViewById(R.id.containerConfirmed),
-            churrasco.guestsConfirmed.map { "${it.name}: ${it.items.joinToString()}" },
-            "Nenhuma confirmação ainda."
+            churrasco.guestsConfirmed.map { it.name },
+            "Ninguem confirmou ainda."
+        )
+
+        bindSimpleList(
+            findViewById(R.id.containerAssignedItems),
+            buildAssignedItemRows(churrasco),
+            "Ninguem assumiu itens ainda."
+        )
+
+        bindSimpleList(
+            findViewById(R.id.containerMissingItems),
+            buildMissingItems(churrasco),
+            "Tudo certo por enquanto."
         )
 
         bindSimpleList(
@@ -221,6 +324,24 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
                 }
             })
         }
+    }
+
+    private fun buildAssignedItemRows(churrasco: Churrasco): List<String> {
+        return churrasco.guestsConfirmed.flatMap { guest ->
+            guest.items.map { item -> "$item - ${guest.name}" }
+        }
+    }
+
+    private fun buildProvidedByCreatorRows(churrasco: Churrasco): List<String> {
+        val assignedItems = churrasco.guestsConfirmed
+            .flatMap { it.items }
+            .toSet()
+        return churrasco.fornecidosAgregados.filter { it !in assignedItems }
+    }
+
+    private fun buildMissingItems(churrasco: Churrasco): List<String> {
+        val provided = churrasco.fornecidosAgregados.toSet()
+        return ItemConstants.listaCompletaDeItens.filter { it !in provided }
     }
 
     private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()

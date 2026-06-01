@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Churrasco</string>
+    <string name="app_tagline">Organize o churrasco sem confus&#227;o.</string>
 
     <string name="title_activity_create_churrasco">Criar churrasco</string>
     <string name="title_activity_join_churrasco">Entrar no churrasco</string>
@@ -30,12 +31,12 @@
     <string name="digite_o_local_do_churrasco">Onde vai ser?</string>
     <string name="digite_seu_nome">Digite seu nome</string>
     <string name="qual_o_seu_nome">Qual &#233; o seu nome?</string>
-    <string name="login_title">Antes de entrar</string>
-    <string name="login_subtitle">Use o nome pelo qual seus amigos v&#227;o te reconhecer no grupo.</string>
+    <string name="login_title">Como seus amigos te chamam?</string>
+    <string name="login_subtitle">Esse nome identifica voc&#234; no grupo, nos convites e na lista de quem leva cada coisa.</string>
     <string name="login_field_label">Seu nome</string>
     <string name="login_field_hint">Exemplo: Arthur</string>
-    <string name="login_button">Continuar</string>
-    <string name="login_footer">Esse nome aparece nos convites e nas confirma&#231;&#245;es.</string>
+    <string name="login_button">Entrar no Churrasco</string>
+    <string name="login_footer">Sem senha por enquanto. &#201; s&#243; para seus amigos saberem quem &#233; voc&#234;.</string>
 
     <string name="create_title">Criar churrasco</string>
     <string name="create_subtitle">Preencha o essencial para todo mundo entender o combinado.</string>
