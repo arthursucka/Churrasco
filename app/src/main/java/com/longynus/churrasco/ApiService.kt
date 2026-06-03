@@ -52,6 +52,17 @@ interface ApiService {
         @Body request: ChatMessageRequest
     ): Call<ApiResponse<Any>>
 
+    @POST("churrascos/{id}/location")
+    fun shareLocation(
+        @Path("id") churrascoId: String,
+        @Body request: LocationUpdateRequest
+    ): Call<ApiResponse<Any>>
+
+    @DELETE("churrascos/{id}/location")
+    fun stopLocationSharing(
+        @Path("id") churrascoId: String
+    ): Call<ApiResponse<Any>>
+
     @POST("send-notification")
     fun sendNotification(
         @Body payload: NotificationPayload

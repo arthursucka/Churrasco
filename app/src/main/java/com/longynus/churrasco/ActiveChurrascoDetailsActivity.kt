@@ -1,29 +1,45 @@
 package com.longynus.churrasco
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ChildEventListener
 import com.longynus.churrasco.adapter.ChatAdapter
 import com.longynus.churrasco.model.ChatMessageRequest
 import com.longynus.churrasco.model.Churrasco
+import com.longynus.churrasco.model.LocationUpdateRequest
 import com.longynus.churrasco.model.Message
+import com.longynus.churrasco.model.SharedLocation
+import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.math.roundToInt
 
 class ActiveChurrascoDetailsActivity : AppCompatActivity() {
 
@@ -35,6 +51,30 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     private lateinit var txtUserRole: TextView
     private lateinit var tvStatusDescription: TextView
     private lateinit var statusCard: LinearLayout
+    private lateinit var btnShareLocation: Button
+    private lateinit var txtLocationStatus: TextView
+    private lateinit var containerLocations: LinearLayout
+    private lateinit var locationMap: WebView
+
+    private var currentChurrasco: Churrasco? = null
+    private var locationManager: LocationManager? = null
+    private var locationListener: LocationListener? = null
+    private var isSharingLocation = false
+    private var mapReady = false
+    private var lastLocations: List<SharedLocation> = emptyList()
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        if (granted) {
+            startLocationSharing()
+        } else {
+            rootLayout.showErrorDialog("Para aparecer no mapa, permita o acesso à sua localização.")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +88,10 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         txtUserRole = findViewById(R.id.txtUserRole)
         tvStatusDescription = findViewById(R.id.tvStatusDescription)
         statusCard = findViewById(R.id.statusCard)
+        btnShareLocation = findViewById(R.id.btnShareLocation)
+        txtLocationStatus = findViewById(R.id.txtLocationStatus)
+        containerLocations = findViewById(R.id.containerLocations)
+        locationMap = findViewById(R.id.locationMap)
 
         churrascoId = intent.getStringExtra("churrascoId") ?: run {
             finish()
@@ -63,7 +107,12 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnJumpToChat).setOnClickListener {
             scrollToChatSection()
         }
+        btnShareLocation.setOnClickListener {
+            if (isSharingLocation) stopLocationSharing() else requestLocationSharing()
+        }
 
+        setupLocationMap()
+        observeSharedLocations()
         setupChat()
         fetchChurrascoDetails()
     }
@@ -163,6 +212,290 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         return "Nao conseguimos enviar a mensagem agora. Tente de novo."
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupLocationMap() {
+        locationMap.settings.javaScriptEnabled = true
+        locationMap.settings.domStorageEnabled = true
+        locationMap.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                mapReady = true
+                renderLocationsOnMap(lastLocations)
+            }
+        }
+        locationMap.loadDataWithBaseURL(
+            "https://unpkg.com/",
+            mapHtml(),
+            "text/html",
+            "UTF-8",
+            null
+        )
+    }
+
+    private fun observeSharedLocations() {
+        FirebaseDatabase
+            .getInstance()
+            .getReference("churrascos/$churrascoId/locations")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val now = System.currentTimeMillis()
+                    val locations = snapshot.children
+                        .mapNotNull { it.getValue(SharedLocation::class.java) }
+                        .filter { it.expiresAt > now }
+                        .sortedByDescending { it.updatedAt }
+
+                    lastLocations = locations
+                    bindSharedLocations(locations)
+                    renderLocationsOnMap(locations)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    txtLocationStatus.text =
+                        "Nao conseguimos carregar o mapa agora. Confira as regras do Firebase."
+                }
+            })
+    }
+
+    private fun requestLocationSharing() {
+        val churrasco = currentChurrasco
+        if (churrasco != null && !locationSharingWindowIsOpen(churrasco)) {
+            rootLayout.showErrorDialog("O mapa libera 1 hora antes do churrasco.")
+            return
+        }
+
+        val hasFine = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFine || hasCoarse) {
+            startLocationSharing()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationSharing() {
+        val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager = manager
+
+        val providers = listOf(
+            LocationManager.NETWORK_PROVIDER,
+            LocationManager.GPS_PROVIDER
+        ).filter { provider ->
+            runCatching { manager.isProviderEnabled(provider) }.getOrDefault(false)
+        }
+
+        if (providers.isEmpty()) {
+            rootLayout.showErrorDialog("Ative a localização do celular para aparecer no mapa.")
+            return
+        }
+
+        val listener = LocationListener { location ->
+            sendLocation(location)
+        }
+        locationListener = listener
+        isSharingLocation = true
+        btnShareLocation.text = "Parar compartilhamento"
+        txtLocationStatus.text = "Compartilhando sua localização por até 2 horas."
+
+        providers.forEach { provider ->
+            manager.requestLocationUpdates(provider, 30_000L, 20f, listener)
+            manager.getLastKnownLocation(provider)?.let { sendLocation(it) }
+        }
+    }
+
+    private fun stopLocationSharing() {
+        locationListener?.let { listener ->
+            locationManager?.removeUpdates(listener)
+        }
+        locationListener = null
+        isSharingLocation = false
+        btnShareLocation.text = "Estou a caminho"
+        txtLocationStatus.text = "Compartilhamento encerrado."
+
+        RetrofitClient.instance
+            .stopLocationSharing(churrascoId)
+            .enqueue(object : Callback<ApiResponse<Any>> {
+                override fun onResponse(
+                    call: Call<ApiResponse<Any>>,
+                    response: Response<ApiResponse<Any>>
+                ) = Unit
+
+                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
+                    rootLayout.showSnackbar("Nao conseguimos encerrar no servidor agora.")
+                }
+            })
+    }
+
+    private fun sendLocation(location: Location) {
+        RetrofitClient.instance
+            .shareLocation(
+                churrascoId,
+                LocationUpdateRequest(
+                    latitude = location.latitude,
+                    longitude = location.longitude
+                )
+            )
+            .enqueue(object : Callback<ApiResponse<Any>> {
+                override fun onResponse(
+                    call: Call<ApiResponse<Any>>,
+                    response: Response<ApiResponse<Any>>
+                ) {
+                    if (!response.isSuccessful || response.body()?.success != true) {
+                        txtLocationStatus.text =
+                            response.body()?.message ?: "Não conseguimos atualizar sua localização."
+                    }
+                }
+
+                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
+                    txtLocationStatus.text = "Sem conexão para atualizar sua localização."
+                }
+            })
+    }
+
+    private fun updateLocationAvailability(churrasco: Churrasco, canParticipate: Boolean) {
+        val isOpen = locationSharingWindowIsOpen(churrasco)
+        btnShareLocation.isEnabled = canParticipate && isOpen
+
+        txtLocationStatus.text = when {
+            !canParticipate -> "Confirme presença antes de aparecer no mapa."
+            isOpen -> "Toque em Estou a caminho para compartilhar sua localização por até 2 horas."
+            else -> "O mapa fica disponível 1 hora antes do churrasco."
+        }
+    }
+
+    private fun bindSharedLocations(locations: List<SharedLocation>) {
+        containerLocations.removeAllViews()
+        if (locations.isEmpty()) {
+            containerLocations.addView(TextView(this).apply {
+                text = "Ninguém compartilhou localização ainda."
+                setTextColor(getColor(R.color.mainMuted))
+                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
+                textSize = 15f
+            })
+            return
+        }
+
+        locations.forEach { location ->
+            containerLocations.addView(TextView(this).apply {
+                val name = location.displayName.ifBlank { location.username }
+                text = "$name - ${seenText(location.updatedAt)}"
+                setTextColor(getColor(R.color.mainInk))
+                background = getDrawable(R.drawable.bg_create_chip)
+                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
+                textSize = 15f
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    bottomMargin = 8.dp()
+                }
+            })
+        }
+    }
+
+    private fun renderLocationsOnMap(locations: List<SharedLocation>) {
+        if (!mapReady) return
+
+        val payload = JSONArray()
+        locations.forEach { location ->
+            payload.put(
+                JSONObject().apply {
+                    put("name", location.displayName.ifBlank { location.username })
+                    put("lat", location.latitude)
+                    put("lng", location.longitude)
+                    put("seen", seenText(location.updatedAt))
+                }
+            )
+        }
+
+        locationMap.evaluateJavascript(
+            "window.updateChurrascoLocations(${payload});",
+            null
+        )
+    }
+
+    private fun locationSharingWindowIsOpen(churrasco: Churrasco): Boolean {
+        val eventTime = ChurrascoDateUtils.eventDateTimeMillis(
+            churrasco.churrascoDate,
+            churrasco.hora
+        ) ?: return true
+
+        val now = System.currentTimeMillis()
+        val opensAt = eventTime - 60 * 60 * 1000
+        val closesAt = eventTime + 4 * 60 * 60 * 1000
+
+        return now in opensAt..closesAt
+    }
+
+    private fun seenText(updatedAt: Long): String {
+        val minutes = ((System.currentTimeMillis() - updatedAt) / 60_000.0).roundToInt()
+        return when {
+            minutes <= 0 -> "visto agora"
+            minutes == 1 -> "visto há 1 min"
+            minutes < 60 -> "visto há $minutes min"
+            else -> "visto há ${minutes / 60} h"
+        }
+    }
+
+    private fun mapHtml(): String =
+        """
+        <!doctype html>
+        <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <style>
+            html, body, #map { height: 100%; width: 100%; margin: 0; background: #FFF8F3; }
+            .leaflet-popup-content { font-family: sans-serif; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            const map = L.map('map', { zoomControl: true }).setView([-14.2350, -51.9253], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+              attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            let markers = [];
+            window.updateChurrascoLocations = function(locations) {
+              markers.forEach(marker => map.removeLayer(marker));
+              markers = [];
+              if (!locations || !locations.length) {
+                map.setView([-14.2350, -51.9253], 4);
+                return;
+              }
+              const bounds = [];
+              locations.forEach(item => {
+                const marker = L.marker([item.lat, item.lng])
+                  .addTo(map)
+                  .bindPopup('<b>' + item.name + '</b><br>' + item.seen);
+                markers.push(marker);
+                bounds.push([item.lat, item.lng]);
+              });
+              if (bounds.length === 1) {
+                map.setView(bounds[0], 15);
+              } else {
+                map.fitBounds(bounds, { padding: [24, 24] });
+              }
+            };
+          </script>
+        </body>
+        </html>
+        """.trimIndent()
+
     private fun scrollToChatInput(scrollView: ScrollView) {
         scrollView.postDelayed({
             scrollView.smoothScrollTo(0, scrollView.getChildAt(0).bottom)
@@ -239,8 +572,10 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     }
 
     private fun populateDetails(churrasco: Churrasco) {
+        currentChurrasco = churrasco
         val isCreator = churrasco.createdBy == userName
         val isConfirmed = churrasco.guestsConfirmed.any { it.name == userName }
+        val canUseLocation = isCreator || isConfirmed
 
         creatorActionsContainer.visibility = if (isCreator) View.VISIBLE else View.GONE
         if (isCreator) {
@@ -249,13 +584,15 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             tvStatusDescription.text = "Acompanhe quem vai, quem leva cada item e converse com o grupo."
         } else if (isConfirmed) {
             statusCard.setBackgroundResource(R.drawable.bg_status_success)
-            txtUserRole.text = "Voce confirmou presenca"
+            txtUserRole.text = "Você confirmou presença"
             tvStatusDescription.text = "Confira os combinados e use o chat para alinhar detalhes."
         } else {
             statusCard.setBackgroundResource(R.drawable.bg_status_warning)
             txtUserRole.text = "Aguardando resposta"
             tvStatusDescription.text = "Responda ao convite antes de participar da conversa."
         }
+
+        updateLocationAvailability(churrasco, canUseLocation)
 
         findViewById<TextView>(R.id.txtDetalhesEvento).text = buildString {
             append("Criado por: ${churrasco.createdBy}\n")
@@ -272,13 +609,13 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         bindSimpleList(
             findViewById(R.id.containerConfirmed),
             churrasco.guestsConfirmed.map { it.name },
-            "Ninguem confirmou ainda."
+            "Ninguém confirmou ainda."
         )
 
         bindSimpleList(
             findViewById(R.id.containerAssignedItems),
             buildAssignedItemRows(churrasco),
-            "Ninguem assumiu itens ainda."
+            "Ninguém assumiu itens ainda."
         )
 
         bindSimpleList(
@@ -342,4 +679,13 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     }
 
     private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
+
+    override fun onDestroy() {
+        if (isSharingLocation) {
+            locationListener?.let { listener ->
+                locationManager?.removeUpdates(listener)
+            }
+        }
+        super.onDestroy()
+    }
 }
