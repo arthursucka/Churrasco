@@ -239,6 +239,61 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/locationSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_create_section"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Quem está chegando"
+                    android:textColor="@color/mainInk"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtLocationStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="O mapa fica disponível 1 hora antes do churrasco."
+                    android:textColor="@color/mainMuted"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnShareLocation"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="14dp"
+                    android:text="Estou a caminho"
+                    android:textAllCaps="false"
+                    android:textColor="@color/md_on_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/mainPrimary"
+                    app:cornerRadius="16dp" />
+
+                <WebView
+                    android:id="@+id/locationMap"
+                    android:layout_width="match_parent"
+                    android:layout_height="240dp"
+                    android:layout_marginTop="14dp"
+                    android:background="@color/mainBackground" />
+
+                <LinearLayout
+                    android:id="@+id/containerLocations"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/chatSection"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -259,7 +314,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Combine detalhes com quem ja confirmou presenca."
+                    android:text="Combine detalhes com quem já confirmou presença."
                     android:textColor="@color/mainMuted"
                     android:textSize="14sp" />
 

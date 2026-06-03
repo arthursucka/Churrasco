@@ -34,6 +34,23 @@ object ChurrascoDateUtils {
     fun eventDateTime(date: String, time: String): String =
         "${normalizeDate(date)} às ${normalizeTime(time)}"
 
+    fun eventDateTimeMillis(date: String, time: String): Long? {
+        val dateParts = normalizeDate(date).split("/")
+        val timeParts = normalizeTime(time).split(":")
+        if (dateParts.size != 3 || timeParts.size != 2) return null
+
+        val day = dateParts[0].toIntOrNull() ?: return null
+        val month = dateParts[1].toIntOrNull() ?: return null
+        val year = dateParts[2].toIntOrNull() ?: return null
+        val hour = timeParts[0].toIntOrNull() ?: return null
+        val minute = timeParts[1].toIntOrNull() ?: return null
+
+        return Calendar.getInstance().apply {
+            set(year, month - 1, day, hour, minute, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
     fun selectedDateTimeIsFuture(
         year: Int?,
         monthZeroBased: Int?,
