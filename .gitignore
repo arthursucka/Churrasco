@@ -15,3 +15,11 @@
 local.properties
 keystore.properties
 *.jks
+
+# Builds e APKs ficam na aba Releases do GitHub, não no repositório
+*.apk
+*.aab
+/app/release/
+
+# Configurações locais do Android Studio
+.idea/
