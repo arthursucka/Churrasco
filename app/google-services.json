@@ -13,7 +13,28 @@
           "package_name": "com.longynus.churrasco"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "120247742476-1hline3p2pj6pdjv0vpt6fp0144oosml.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.longynus.churrasco",
+            "certificate_hash": "1e36aeddaf80c088821a26ad55627018a34b5323"
+          }
+        },
+        {
+          "client_id": "120247742476-1uthhes9vkj9j08kafe2g35g1bk77shb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.longynus.churrasco",
+            "certificate_hash": "34fc2837d832e70ff1bdeaf411120fa0ba7f1a07"
+          }
+        },
+        {
+          "client_id": "120247742476-itpd72cvmrufous6ebknieajd8c4cgnc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAbsXiFwqrgZGlqla0WYSJx7wzr9PIqCZU"
@@ -21,7 +42,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "120247742476-itpd72cvmrufous6ebknieajd8c4cgnc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

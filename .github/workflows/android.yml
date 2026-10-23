@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -22,20 +23,18 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Testes e build de debug
-        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
-
-      # A partir daqui, só quando uma tag vX.Y é enviada.
-      - name: Conferir versão da tag
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Versão
+        id: version
         run: |
-          tag="${GITHUB_REF_NAME#v}"
-          app=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
-          if [ "$tag" != "$app" ]; then
-            echo "::error::A tag v$tag não bate com versionName $app em app/build.gradle.kts"
-            exit 1
+          # Numa tag v2.1, a versão do app é 2.1 (versionCode 2010); fora de tag, a do build.gradle.
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "args=-PversionName=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Testes e build de debug
+        run: ./gradlew --no-daemon ${{ steps.version.outputs.args }} testDebugUnitTest assembleDebug
+
+      # A partir daqui, só quando uma tag vX.Y é enviada.
       - name: Preparar assinatura
         if: startsWith(github.ref, 'refs/tags/v')
         env:
@@ -52,18 +51,19 @@ jobs:
             echo "keyPassword=$KEY_PASSWORD"
           } > keystore.properties
 
-      - name: Build de release assinada
+      - name: Build de release assinada (APK e AAB para a Play Store)
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          ./gradlew --no-daemon assembleRelease
-          cp app/build/outputs/apk/release/app-release.apk "churrasco-release-${GITHUB_REF_NAME}.apk"
+          ./gradlew --no-daemon ${{ steps.version.outputs.args }} assembleRelease bundleRelease
+          cp app/build/outputs/apk/release/app-release.apk "churrasco-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "churrasco-${GITHUB_REF_NAME}.aab"
 
       - name: Publicar Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "churrasco-release-${GITHUB_REF_NAME}.apk" \
+          gh release create "$GITHUB_REF_NAME" "churrasco-${GITHUB_REF_NAME}.apk" "churrasco-${GITHUB_REF_NAME}.aab" \
             --title "Churrasco $GITHUB_REF_NAME" --generate-notes --latest
 
       - name: Guardar APK de debug
@@ -72,4 +72,78 @@ jobs:
         with:
           name: churrasco-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+  # O app de verdade num emulador Android, contra o backend e os emuladores do Firebase.
+  e2e:
+    if: "!startsWith(github.ref, 'refs/tags/v')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Backend (branch v2 enquanto existir; depois, main)
+        run: |
+          ref=main
+          if git ls-remote --exit-code --heads https://github.com/arthursucka/fcm-server v2 >/dev/null; then ref=v2; fi
+          git clone --depth 1 --branch "$ref" https://github.com/arthursucka/fcm-server ../fcm-server
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Dependências
+        run: |
+          (cd ../fcm-server && npm ci)
+          (cd e2e && npm install)
+
+      - name: Build localTest
+        run: ./gradlew --no-daemon assembleLocalTest
+
+      - name: Ligar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Emuladores do Firebase, MongoDB e backend
+        run: |
+          (cd e2e && nohup npm run emulators > emulators.log 2>&1 &)
+          (cd e2e && nohup npm run mongo > mongo.log 2>&1 &)
+          for i in $(seq 1 90); do grep -q MONGO_READY e2e/mongo.log && curl -sf http://127.0.0.1:9099/ >/dev/null && break; sleep 2; done
+          cd ../fcm-server
+          CHURRASCO_LOCAL_TEST=1 GCLOUD_PROJECT=demo-churrasco \
+          FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 \
+          FIREBASE_DATABASE_URL="http://127.0.0.1:9000/?ns=demo-churrasco" \
+          MONGO_URI="mongodb://127.0.0.1:27027/churrasco_test_e2e?replicaSet=testset" PORT=3000 \
+          nohup node server.js > "$GITHUB_WORKSPACE/e2e/server.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/health && break; sleep 2; done
+
+      - name: Teste de ponta a ponta
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: cd e2e && FCM_SERVER_DIR=../../fcm-server python drive.py
+
+      - name: Capturas e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e
+          path: |
+            e2e/shots
+            e2e/*.log
           retention-days: 14

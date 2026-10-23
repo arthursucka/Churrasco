@@ -10,7 +10,6 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.LOCAL_BACKEND) useLocalFirebase()
-        RetrofitClient.init(applicationContext)
     }
 
     // Projeto "demo-" dos emuladores: o backend em CHURRASCO_LOCAL_TEST só aceita esse.

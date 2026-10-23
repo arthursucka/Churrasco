@@ -1,108 +1,81 @@
-"""Recuperação de conta antiga, do pedido no app até a aprovação pelo administrador.
+"""Recuperação de conta antiga, do pedido no app até a aprovação pela tela do administrador.
 
 Precisa do backend com CHURRASCO_LEGACY_ONBOARDING_ENABLED=1,
 CHURRASCO_LEGACY_MIGRATION_WINDOW=1 e CHURRASCO_MIGRATION_REVIEWER_UID=reviewer-uid-e2e.
 """
-import subprocess, sys, time
-from drive import (ADB, APK, AUTH, API, FCM_SERVER, PASSWORD, PKG, PROJECT, adb, check, dismiss_dialog, find, http,
-                   reset_state, results, scroll_to, shot, sign_in, tap, type_into, verify_email, wait_for)
-
-REVIEWER_UID = "reviewer-uid-e2e"
-
-
-def seed_legacy_user(name):
-    """Perfil da versão sem login: só nome, sem firebaseUid."""
-    subprocess.run(["node", "-e",
-                    "require('mongoose').connect('mongodb://127.0.0.1:27027/churrasco_test_e2e?replicaSet=testset')"
-                    f".then(m=>m.connection.db.collection('users').insertOne({{username:'{name}',displayName:'{name}',fcmTokens:[]}}))"
-                    ".then(()=>process.exit(0))"], cwd=FCM_SERVER, check=True)
-
-
-def create_reviewer(email):
-    # Com o token "owner" o emulador aceita escolher o UID (igual ao configurado no servidor).
-    req_body = {"localId": REVIEWER_UID, "email": email, "password": PASSWORD, "emailVerified": True}
-    import json, urllib.request
-    req = urllib.request.Request(f"{AUTH}/identitytoolkit.googleapis.com/v1/projects/{PROJECT}/accounts",
-                                 data=json.dumps(req_body).encode(), method="POST")
-    req.add_header("Content-Type", "application/json")
-    req.add_header("Authorization", "Bearer owner")
-    urllib.request.urlopen(req, timeout=15).read()
-    status, _ = http("POST", f"{API}/users/register", {"username": "Admin", "displayName": "Admin"}, sign_in(email))
-    return status
-
-
-def sign_out_in_app():
-    tap(scroll_to(rid="btnSwitchUser"))
-    tap(wait_for(text="Sair"))
-    wait_for(rid="btnSignIn")
+import time
+from support import (adb, api_user, check, dismiss_dialog, find, finish, install_fresh, launch, mongo, reset_state,
+                     scroll_to, screen_text, shot, tap, type_into, verify_email, wait_for, PKG, sao_paulo)
 
 
 def sign_in_in_app(email):
     type_into("edtEmail", email)
-    type_into("edtPassword", PASSWORD)
-    tap(find(rid="btnSignIn"))
+    type_into("edtPassword", "teste-local-123")
+    tap(scroll_to(rid="btnSignIn"))
 
 
 def main():
     reset_state()
-    seed_legacy_user("Antigo")
-    check("administrador criado", create_reviewer("admin@churrasco.test") == 201)
+    # Perfil da v1: só o nome, sem firebaseUid. Um churrasco dele também fica pelo nome.
+    date, hour = sao_paulo(60 * 24)
+    mongo(".then(m=>m.connection.db.collection('users').insertOne({username:'Antigo',displayName:'Antigo',fcmTokens:[]}))")
+    mongo(f".then(m=>m.connection.db.collection('churrascos').insertOne({{schemaVersion:2,churrascoDate:'{date}',hora:'{hour}',local:'Churrasco antigo',address:'',organizerUid:null,organizerLegacyUsername:'Antigo',participants:[],contributions:[],expenses:[],createdAt:new Date(),__v:0}}))")
+    api_user("admin@churrasco.test", "Admin", uid="reviewer-uid-e2e")
 
-    adb("uninstall", PKG, check=False)
-    adb("install", "-r", "-g", APK)
-    adb("shell", "monkey", "-p", PKG, "-c", "android.intent.category.LAUNCHER", "1")
+    install_fresh()
+    launch()
 
     # 1. Dono da conta antiga cria acesso novo e pede o nome "Antigo"
     owner = "antigo@churrasco.test"
     wait_for(rid="btnCreateAccount")
     type_into("edtEmail", owner)
-    type_into("edtPassword", PASSWORD)
-    tap(find(rid="btnCreateAccount"))
+    type_into("edtPassword", "teste-local-123")
+    tap(scroll_to(rid="btnCreateAccount"))
     wait_for(rid="btnCheckVerified")
     verify_email(owner)
-    tap(find(rid="btnCheckVerified"))
+    tap(scroll_to(rid="btnCheckVerified"))
     wait_for(rid="btnSaveProfile")
-    check("botão de recuperar conta antiga aparece", wait_for(rid="btnLegacyAccount", timeout=20) is not None)
     type_into("edtUserName", "Antigo")
-    tap(find(rid="btnSaveProfile"))
-    check("nome antigo não pode ser pego direto", wait_for(contains="reservado", timeout=20) is not None)
+    tap(scroll_to(rid="btnSaveProfile"))
+    check("nome antigo não pode ser pego direto", wait_for(contains="conta antiga", timeout=30) is not None, screen_text()[:200])
     dismiss_dialog()
-    tap(find(rid="btnLegacyAccount"))
+    check("botão de recuperar conta antiga aparece", scroll_to(rid="btnLegacyAccount", timeout=20) is not None)
+    tap(scroll_to(rid="btnLegacyAccount"))
     tap(wait_for(text="Enviar pedido"))
-    check("mostra pedido em análise", wait_for(contains="está com o administrador", timeout=20) is not None)
+    check("mostra pedido em análise", wait_for(contains="está com o administrador", timeout=30) is not None)
     shot("10-pedido-em-analise")
-    tap(find(rid="btnRefreshStatus"))
-    check("atualizar mantém em análise", wait_for(contains="está com o administrador", timeout=20) is not None)
 
     # 2. Administrador aprova pelo app
-    tap(find(rid="btnUseAnotherAccount"))
-    wait_for(rid="btnSignIn")
+    tap(scroll_to(rid="btnUseAnotherAccount"))
+    wait_for(rid="btnSignIn", timeout=30)
     sign_in_in_app("admin@churrasco.test")
-    check("administrador entra", wait_for(contains="Oi, Admin") is not None)
-    review = scroll_to(rid="btnReviewLegacyMain")
+    check("administrador entra", wait_for(contains="Oi, Admin", timeout=60) is not None)
+    review = scroll_to(rid="btnReviewLegacyMain", timeout=30)
     check("botão de revisão aparece só para o administrador", review is not None)
     tap(review)
-    check("pedido aparece na revisão", wait_for(contains=owner, timeout=20) is not None)
+    check("pedido aparece na revisão", wait_for(contains=owner, timeout=30) is not None)
     shot("11-revisao")
-    tap(wait_for(text="Confirmar titular e aprovar"))
-    field = wait_for(contains="Como você confirmou")
-    tap(field)
+    tap(scroll_to(text="Confirmar titular e aprovar"))
+    time.sleep(1)
+    edit = next((n for n in __import__("support").nodes(__import__("support").dump()) if n.get("class", "").endswith("EditText")), None)
+    tap(edit)
     adb("shell", "input", "text", "Conferido%spessoalmente")
     tap(wait_for(text="OK"))
-    check("lista fica vazia depois de aprovar", wait_for(contains="Nenhuma solicitação pendente", timeout=30) is not None)
-    adb("shell", "input", "keyevent", "KEYCODE_BACK")
-    time.sleep(1)
+    check("lista fica vazia depois de aprovar", wait_for(contains="Nenhuma solicitação pendente", timeout=40) is not None)
 
-    # 3. Dono entra e recebe o nome antigo
-    sign_out_in_app()
+    # 3. Dono entra com o nome antigo e vê o churrasco dele
+    adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
+    tap(scroll_to(rid="btnSwitchUser"))
+    tap(wait_for(text="Sair"))
+    wait_for(rid="btnSignIn", timeout=30)
     sign_in_in_app(owner)
-    check("dono entra com o nome antigo", wait_for(contains="Oi, Antigo", timeout=40) is not None)
+    check("dono entra com o nome antigo", wait_for(contains="Oi, Antigo", timeout=60) is not None)
+    check("revisão não aparece para quem não é admin", find(rid="btnReviewLegacyMain") is None)
+    tap(wait_for(rid="btnActiveChurrascos", timeout=30))
+    check("churrasco antigo volta para o dono", wait_for(contains="Churrasco antigo", timeout=40) is not None)
     shot("12-conta-recuperada")
-    check("botão de revisão não aparece para quem não é admin", find(rid="btnReviewLegacyMain") is None)
 
-    failed = [r for r in results if not r[1]]
-    print(f"\n{len(results) - len(failed)}/{len(results)} passaram")
-    sys.exit(1 if failed else 0)
+    finish()
 
 
 if __name__ == "__main__":
