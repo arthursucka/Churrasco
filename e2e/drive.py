@@ -160,7 +160,9 @@ def main():
     tap_text("Editar data, local ou convidados")
     wait_for(contains="Editar churrasco", timeout=30)
     time.sleep(2)  # o formulário carrega os dados do churrasco
-    fill(field("Local"), "Sitio do teste")
+    local = field("Local", timeout=5)
+    # Já vem preenchido: em alguns Androids o hint não aparece; o local é o 1º campo do formulário.
+    fill(local if local is not None else edit_texts()[0], "Sitio do teste")
     shot("07a-editar")
     tap(wait_for(text="Salvar"))
     time.sleep(3)
