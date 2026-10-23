@@ -6,11 +6,12 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.longynus.churrasco.KeyboardInsetsHelper
 import com.longynus.churrasco.R
 import com.longynus.churrasco.TopBarHelper
 import com.longynus.churrasco.data.ApiError
@@ -43,7 +44,17 @@ abstract class ScreenActivity : AppCompatActivity() {
         scroll = findViewById(R.id.scroll)
         swipe = findViewById(R.id.swipeRefresh)
         TopBarHelper.setup(this, title)
-        KeyboardInsetsHelper.setup(this)
+        // Android 15+ desenha atrás da barra de navegação: a coluna da tela (com a barra de
+        // ação de baixo) sobe a altura dela, ou a do teclado quando ele está aberto.
+        window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        val column = bottomBar.parent as View
+        ViewCompat.setOnApplyWindowInsetsListener(column) { view, insets ->
+            val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, maxOf(nav, ime))
+            insets
+        }
+        ViewCompat.requestApplyInsets(column)
         swipe.isEnabled = onRefresh != null
         swipe.setColorSchemeResources(R.color.mainPrimary)
         swipe.setOnRefreshListener { onRefresh?.invoke() }
