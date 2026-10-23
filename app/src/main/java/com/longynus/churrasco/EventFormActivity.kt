@@ -141,7 +141,10 @@ class EventFormActivity : ScreenActivity() {
         val start = ChurrascoDateUtils.eventDateTimeMillis(date, time)
         when {
             date.isBlank() || time.isBlank() -> return toast(getString(R.string.form_need_datetime))
-            start == null || start <= System.currentTimeMillis() -> return toast(getString(R.string.form_need_future))
+            start == null -> return toast(getString(R.string.form_need_future))
+            // Na edição, só exige futuro se a data/hora mudou: dá para corrigir o endereço com o churrasco rolando.
+            start <= System.currentTimeMillis() && (existing == null || date != existing?.churrascoDate || time != existing?.hora) ->
+                return toast(getString(R.string.form_need_future))
             place.length < 3 -> return toast(getString(R.string.form_need_local))
         }
         val request = EventRequest(date, time, place, address.text.toString().trim(), selectedFriends.toList())
