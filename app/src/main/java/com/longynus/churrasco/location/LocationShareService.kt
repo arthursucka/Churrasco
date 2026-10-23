@@ -86,7 +86,9 @@ class LocationShareService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            churrascoId?.let { id -> scope.launch { ChurrascoRepository.stopLocation(id) } }
+            // Escopo próprio: o do serviço é cancelado no onDestroy e cortaria o pedido
+            // no meio, deixando a localização visível para os outros.
+            churrascoId?.let { id -> CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { ChurrascoRepository.stopLocation(id) } }
             finish(getString(R.string.location_stopped))
             return START_NOT_STICKY
         }

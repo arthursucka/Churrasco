@@ -6,22 +6,15 @@ emulador Android ligado. Ver e2e/README.md.
 """
 import time
 from support import (API, PKG, adb, api_user, befriend, check, db_get, dismiss_dialog, event, find, fill,
-                     finish, http, install_fresh, launch, nodes, dump, reset_state, sao_paulo, scroll_to,
+                     finish, http, install_fresh, launch, reset_state, sao_paulo, scroll_to,
                      screen_text, shot, sign_in, tap, tap_text, type_into, verify_email, wait_for)
 
 
-def field(hint, timeout=20):
+def field(hint, timeout=60):
     """Campo de texto pelo hint (os campos montados em código não têm id)."""
-    end = time.time() + timeout
-    while time.time() < end:
-        for n in nodes(dump()):
-            if n.get("class", "").endswith("EditText") and hint in (n.get("hint") or ""):
-                return n
-        node = scroll_to(contains=hint, timeout=4)
-        if node is not None:
-            return node
-    return None
-
+    # Primeiro sem rolar: em diálogos, um gesto fora deles os fecharia.
+    node = wait_for(hint=hint, timeout=5)
+    return node if node is not None else scroll_to(hint=hint, timeout=timeout)
 
 def sign_up_in_app(email, name):
     type_into("edtEmail", email)

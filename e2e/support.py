@@ -89,9 +89,11 @@ def bounds(n):
     return list(map(int, re.findall(r"\d+", n.get("bounds"))))
 
 
-def find(rid=None, text=None, contains=None, desc=None, root=None):
+def find(rid=None, text=None, contains=None, desc=None, hint=None, root=None):
     root = root if root is not None else dump()
     for n in nodes(root):
+        if hint is not None and not (n.get("class", "").endswith("EditText") and hint in (n.get("hint") or "")):
+            continue
         if rid and not n.get("resource-id", "").endswith(":id/" + rid):
             continue
         if text is not None and n.get("text") != text:
