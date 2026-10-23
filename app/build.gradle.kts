@@ -21,13 +21,17 @@ android {
 
     defaultConfig {
         applicationId = "com.longynus.churrasco"
-        minSdk = 21
+        // Firebase Auth exige Android 6.0+
+        minSdk = 23
         targetSdk = 35
 
-        versionCode = 19
-        versionName = "1.18"
+        versionCode = 20
+        versionName = "1.19"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_BASE_URL", "\"https://fcm-server-oe8u.onrender.com/\"")
+        buildConfigField("boolean", "LOCAL_BACKEND", "false")
     }
 
     signingConfigs {
@@ -52,6 +56,16 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        // Teste de ponta a ponta no emulador Android contra o backend local
+        // (CHURRASCO_LOCAL_TEST=1) e os emuladores do Firebase. 10.0.2.2 é o
+        // localhost da máquina vista de dentro do emulador.
+        create("localTest") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
+            buildConfigField("boolean", "LOCAL_BACKEND", "true")
+        }
     }
 
     compileOptions {
@@ -64,6 +78,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.2"
@@ -104,8 +119,9 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
 
-    // Firebase (Messaging, Crashlytics, Realtime DB)
+    // Firebase (Auth, Messaging, Crashlytics, Realtime DB)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.crashlytics.ktx)
     implementation(libs.firebase.database.ktx)

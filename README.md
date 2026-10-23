@@ -10,14 +10,20 @@ Baixe o APK mais recente na aba **[Releases](https://github.com/arthursucka/Chur
 
 ## Stack
 
-- Kotlin + Jetpack Compose
+- Kotlin + Android Views (XML) + Retrofit
 - Firebase (Auth, Realtime Database, Cloud Messaging, Crashlytics)
-- minSdk 21 · targetSdk 35
+- minSdk 23 · targetSdk 35
+
+## Login
+
+Cada pessoa entra com e-mail e senha (Firebase Auth) e precisa confirmar o e-mail antes de usar o app. O app manda o ID token do Firebase em todas as chamadas ao backend (`Authorization: Bearer ...`), e o Realtime Database só libera chat e mapa para quem participa do churrasco.
+
+Quem usava o app antes do login por e-mail pode pedir para recuperar o nome antigo na tela de cadastro. O pedido fica em análise até o administrador aprovar no backend.
 
 ## Como compilar
 
 1. Abra o projeto no Android Studio (JDK 17).
-2. Garanta que `app/google-services.json` aponta para o seu projeto Firebase.
+2. Garanta que `app/google-services.json` aponta para o seu projeto Firebase, com o provedor **E-mail/senha** ativado em Authentication.
 3. Rode:
 
 ```bash

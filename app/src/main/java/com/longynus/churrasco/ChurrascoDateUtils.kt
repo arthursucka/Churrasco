@@ -2,6 +2,7 @@ package com.longynus.churrasco
 
 import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 object ChurrascoDateUtils {
     fun formatDate(day: Int, monthZeroBased: Int, year: Int): String =
@@ -32,23 +33,21 @@ object ChurrascoDateUtils {
     }
 
     fun eventDateTime(date: String, time: String): String =
-        "${normalizeDate(date)} às ${normalizeTime(time)}"
+        "${normalizeDate(date)} às ${normalizeTime(time)} (São Paulo)"
 
     fun eventDateTimeMillis(date: String, time: String): Long? {
-        val dateParts = normalizeDate(date).split("/")
-        val timeParts = normalizeTime(time).split(":")
-        if (dateParts.size != 3 || timeParts.size != 2) return null
-
-        val day = dateParts[0].toIntOrNull() ?: return null
-        val month = dateParts[1].toIntOrNull() ?: return null
-        val year = dateParts[2].toIntOrNull() ?: return null
-        val hour = timeParts[0].toIntOrNull() ?: return null
-        val minute = timeParts[1].toIntOrNull() ?: return null
-
-        return Calendar.getInstance().apply {
-            set(year, month - 1, day, hour, minute, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        if (!Regex("""\d{2}/\d{2}/\d{4}""").matches(date) ||
+            !Regex("""\d{2}:\d{2}""").matches(time)) return null
+        val (day, month, year) = date.split("/").map { it.toInt() }
+        val (hour, minute) = time.split(":").map { it.toInt() }
+        if (year !in 2020..2100) return null
+        return runCatching {
+            Calendar.getInstance(TimeZone.getTimeZone("America/Sao_Paulo")).apply {
+                clear()
+                isLenient = false
+                set(year, month - 1, day, hour, minute, 0)
+            }.timeInMillis
+        }.getOrNull()
     }
 
     fun selectedDateTimeIsFuture(
@@ -62,12 +61,9 @@ object ChurrascoDateUtils {
             return false
         }
 
-        val selected = Calendar.getInstance().apply {
-            set(year, monthZeroBased, day, hour, minute, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        return selected.after(Calendar.getInstance())
+        val selected = eventDateTimeMillis(formatDate(day, monthZeroBased, year), formatTime(hour, minute))
+            ?: return false
+        return selected > System.currentTimeMillis()
     }
 
     fun startOfToday(): Calendar =
@@ -78,3 +74,5 @@ object ChurrascoDateUtils {
             set(Calendar.MILLISECOND, 0)
         }
 }
+
+

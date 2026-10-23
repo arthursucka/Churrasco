@@ -63,71 +63,212 @@
                 android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/tvPromptName"
+                    android:id="@+id/tvLoginTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/login_title"
+                    android:text="@string/login_credentials_title"
                     android:textColor="@color/mainInk"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/tvLoginSubtitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:lineSpacingExtra="3dp"
-                    android:text="@string/login_subtitle"
+                    android:text="@string/login_credentials_subtitle"
                     android:textColor="@color/mainMuted"
                     android:textSize="16sp" />
 
-                <com.google.android.material.textfield.TextInputLayout
+                <!-- Etapa 1: e-mail e senha -->
+                <LinearLayout
+                    android:id="@+id/groupCredentials"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:hint="@string/login_field_label"
-                    app:boxBackgroundColor="@color/mainBackground"
-                    app:boxCornerRadiusBottomEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusTopStart="16dp"
-                    app:boxStrokeColor="@color/mainPrimary"
-                    app:hintTextColor="@color/mainPrimary">
+                    android:orientation="vertical">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/edtUserName"
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Churrasco.TextInput"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="@string/login_field_hint"
-                        android:inputType="textPersonName|textCapWords"
-                        android:maxLines="1"
-                        android:minHeight="56dp"
-                        android:textColor="@color/mainInk"
-                        android:textColorHint="@color/mainMuted"
-                        android:textSize="16sp" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_marginTop="24dp"
+                        android:hint="@string/login_email_label"
+                        app:boxBackgroundColor="@color/mainBackground">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLogin"
-                    android:layout_width="match_parent"
-                    android:layout_height="58dp"
-                    android:layout_marginTop="18dp"
-                    android:text="@string/login_button"
-                    android:textAllCaps="false"
-                    android:textColor="@color/md_on_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/mainPrimary"
-                    app:cornerRadius="18dp" />
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtEmail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints="emailAddress"
+                            android:inputType="textEmailAddress"
+                            android:maxLines="1"
+                            android:minHeight="56dp"
+                            android:textColor="@color/mainInk"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                <TextView
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Churrasco.TextInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/login_password_label"
+                        app:boxBackgroundColor="@color/mainBackground"
+                        app:endIconMode="password_toggle"
+                        app:helperText="@string/login_password_helper">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtPassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints="password"
+                            android:inputType="textPassword"
+                            android:maxLines="1"
+                            android:minHeight="56dp"
+                            android:textColor="@color/mainInk"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSignIn"
+                        style="@style/Churrasco.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:layout_marginTop="18dp"
+                        android:text="@string/login_sign_in"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/mainPrimary"
+                        app:cornerRadius="18dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCreateAccount"
+                        style="@style/Churrasco.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/login_create_account" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnForgotPassword"
+                        style="@style/Churrasco.Button.Text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/login_forgot_password" />
+                </LinearLayout>
+
+                <!-- Etapa 2: confirmar o e-mail -->
+                <LinearLayout
+                    android:id="@+id/groupVerify"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:gravity="center"
-                    android:lineSpacingExtra="2dp"
-                    android:text="@string/login_footer"
-                    android:textColor="@color/mainMuted"
-                    android:textSize="13sp" />
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCheckVerified"
+                        style="@style/Churrasco.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/login_verify_done"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/mainPrimary"
+                        app:cornerRadius="18dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnResendVerification"
+                        style="@style/Churrasco.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/login_verify_resend" />
+                </LinearLayout>
+
+                <!-- Etapa 3: nome no grupo -->
+                <LinearLayout
+                    android:id="@+id/groupProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Churrasco.TextInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:hint="@string/login_field_label"
+                        app:boxBackgroundColor="@color/mainBackground"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="60">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/edtUserName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName|textCapWords"
+                            android:maxLength="60"
+                            android:maxLines="1"
+                            android:minHeight="56dp"
+                            android:textColor="@color/mainInk"
+                            android:textSize="16sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSaveProfile"
+                        style="@style/Churrasco.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:layout_marginTop="18dp"
+                        android:text="@string/login_button"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/mainPrimary"
+                        app:cornerRadius="18dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLegacyAccount"
+                        style="@style/Churrasco.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/login_legacy_button"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- Etapa 3b: pedido de conta antiga em análise -->
+                <LinearLayout
+                    android:id="@+id/groupWaiting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRefreshStatus"
+                        style="@style/Churrasco.Button.Primary"
+                        android:layout_width="match_parent"
+                        android:layout_height="58dp"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/login_waiting_refresh"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/mainPrimary"
+                        app:cornerRadius="18dp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnUseAnotherAccount"
+                    style="@style/Churrasco.Button.Text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/login_use_another_account"
+                    android:visibility="gone" />
             </LinearLayout>
 
         </LinearLayout>
@@ -188,6 +329,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#80000000"
+        android:clickable="true"
+        android:focusable="true"
         android:visibility="gone">
 
         <ProgressBar

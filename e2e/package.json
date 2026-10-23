@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "description": "Ferramentas do teste de ponta a ponta (emuladores do Firebase e MongoDB descartável)",
+  "scripts": {
+    "emulators": "cd .. && firebase emulators:start --project demo-churrasco --only auth,database",
+    "mongo": "node mongo.js"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0",
+    "mongodb-memory-server": "^10.0.0"
+  }
+}

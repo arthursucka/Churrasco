@@ -69,9 +69,19 @@ class ChurrascoDetailsActivity : AppCompatActivity() {
             .getString("userName", "") ?: ""
 
         btnAceitar.setOnClickListener { openItemSelection() }
-        btnDeclinar.setOnClickListener { declinePresenca() }
+        btnDeclinar.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Recusar participação?")
+                .setMessage("Os itens que você assumiu ficarão disponíveis para outras pessoas.")
+                .setPositiveButton("Recusar") { _, _ -> declinePresenca() }
+                .setNegativeButton("Voltar", null).show()
+        }
         btnOpenChat.setOnClickListener { openActiveDetails() }
 
+    }
+
+    override fun onResume() {
+        super.onResume()
         fetchChurrascoDetails()
     }
 
@@ -147,15 +157,18 @@ class ChurrascoDetailsActivity : AppCompatActivity() {
             alreadyConfirmed -> {
                 statusCard.setBackgroundResource(R.drawable.bg_status_success)
                 tvInviteStatus.text = "Voce confirmou presenca"
-                tvStatusDescription.text = "Agora voce pode acompanhar os itens e conversar com o grupo."
-                showChatAction()
+                tvStatusDescription.text = "Você pode alterar os itens que vai levar ou cancelar sua presença."
+                showInviteActions()
+                btnAceitar.text = "Alterar meus itens"
+                btnDeclinar.text = "Cancelar minha presença"
+                btnOpenChat.visibility = View.VISIBLE
             }
 
             alreadyDeclined -> {
                 statusCard.setBackgroundResource(R.drawable.bg_status_error)
                 tvInviteStatus.text = "Voce recusou este convite"
-                tvStatusDescription.text = "Este churrasco fica aqui apenas para consulta."
-                inviteActionsContainer.visibility = View.GONE
+                tvStatusDescription.text = "Você pode aceitar o convite novamente se mudar de ideia."
+                showInviteActions()
             }
 
             else -> {
@@ -170,6 +183,8 @@ class ChurrascoDetailsActivity : AppCompatActivity() {
     private fun showInviteActions() {
         inviteActionsContainer.visibility = View.VISIBLE
         tvActionsTitle.text = "Sua resposta"
+        btnAceitar.text = "Aceitar convite"
+        btnDeclinar.text = "Recusar convite"
         btnOpenChat.visibility = View.GONE
         btnAceitar.visibility = View.VISIBLE
         btnDeclinar.visibility = View.VISIBLE
@@ -239,12 +254,13 @@ class ChurrascoDetailsActivity : AppCompatActivity() {
 
     private fun openItemSelection() {
         val churrasco = currentChurrasco ?: return
-        val naoFornecidos = ItemConstants.listaCompletaDeItens
-            .filter { it !in churrasco.fornecidosAgregados }
+        val naoFornecidos = (ItemConstants.listaCompletaDeItens + churrasco.ownItems(userName))
+            .distinct().filterNot { it in churrasco.itemsReservedByOthers(userName) }
 
         Intent(this, EscolherItensActivity::class.java).also {
             it.putExtra("churrascoId", churrascoId)
             it.putStringArrayListExtra("itensNaoFornecidos", ArrayList(naoFornecidos))
+            it.putStringArrayListExtra("meusItens", ArrayList(churrasco.ownItems(userName)))
             startActivity(it)
         }
     }

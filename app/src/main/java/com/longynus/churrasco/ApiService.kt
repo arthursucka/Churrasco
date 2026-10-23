@@ -52,6 +52,11 @@ interface ApiService {
         @Body request: ChatMessageRequest
     ): Call<ApiResponse<Any>>
 
+    @POST("churrascos/{id}/location-session")
+    fun startLocationSession(
+        @Path("id") churrascoId: String
+    ): Call<LocationSessionResponse>
+
     @POST("churrascos/{id}/location")
     fun shareLocation(
         @Path("id") churrascoId: String,
@@ -63,11 +68,6 @@ interface ApiService {
         @Path("id") churrascoId: String
     ): Call<ApiResponse<Any>>
 
-    @POST("send-notification")
-    fun sendNotification(
-        @Body payload: NotificationPayload
-    ): Call<ApiResponse<Any>>
-
     @GET("users/{userName}/invites")
     fun getPendingInvites(
         @Path("userName") userName: String
@@ -76,10 +76,39 @@ interface ApiService {
     @POST("/users/register")
     fun registerUser(
         @Body request: RegisterRequest
-    ): Call<ApiResponse<Any>>
+    ): Call<ApiResponse<Usuario>>
 
     @POST("/users/login")
     fun login(
         @Body request: LoginRequest
+    ): Call<ApiResponse<Usuario>>
+
+    @POST("/users/logout")
+    fun logout(
+        @Body request: LoginRequest
     ): Call<ApiResponse<Any>>
+
+    @GET("/legacy-link/me")
+    fun legacyLinkStatus(): Call<ApiResponse<LegacyLinkStatus>>
+
+    @POST("/legacy-link/request")
+    fun requestLegacyLink(
+        @Body request: LegacyLinkRequest
+    ): Call<ApiResponse<LegacyLinkRequestInfo>>
+
+    // Só o UID configurado em CHURRASCO_MIGRATION_REVIEWER_UID tem acesso.
+    @GET("/legacy-link/review")
+    fun legacyLinkReviews(): Call<ApiResponse<List<LegacyLinkRequestInfo>>>
+
+    @POST("/legacy-link/{id}/approve")
+    fun approveLegacyLink(
+        @Path("id") id: String,
+        @Body approval: LegacyLinkApproval
+    ): Call<ApiResponse<LegacyLinkRequestInfo>>
+
+    @POST("/legacy-link/{id}/reject")
+    fun rejectLegacyLink(
+        @Path("id") id: String,
+        @Body rejection: LegacyLinkRejection
+    ): Call<ApiResponse<LegacyLinkRequestInfo>>
 }

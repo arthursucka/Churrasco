@@ -9,6 +9,8 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
@@ -25,12 +27,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ChildEventListener
 import com.longynus.churrasco.adapter.ChatAdapter
 import com.longynus.churrasco.model.ChatMessageRequest
 import com.longynus.churrasco.model.Churrasco
+import com.longynus.churrasco.model.LocationSessionResponse
 import com.longynus.churrasco.model.LocationUpdateRequest
 import com.longynus.churrasco.model.Message
 import com.longynus.churrasco.model.SharedLocation
@@ -39,6 +43,9 @@ import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class ActiveChurrascoDetailsActivity : AppCompatActivity() {
@@ -60,8 +67,21 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     private var locationManager: LocationManager? = null
     private var locationListener: LocationListener? = null
     private var isSharingLocation = false
+    private var locationSessionId: String? = null
+    private val sessionExpiryHandler = Handler(Looper.getMainLooper())
+    private val sessionExpiry = Runnable { endLocalSharing("O tempo de compartilhamento acabou.") }
     private var mapReady = false
     private var lastLocations: List<SharedLocation> = emptyList()
+
+    // O Realtime Database só libera leitura para quem participa (regra eventAccess),
+    // então os listeners entram depois de confirmar o papel da pessoa no evento.
+    private lateinit var chatAdapter: ChatAdapter
+    private lateinit var rvChat: RecyclerView
+    private lateinit var txtChatEmpty: TextView
+    private var chatRef: DatabaseReference? = null
+    private var chatListener: ChildEventListener? = null
+    private var locationsRef: DatabaseReference? = null
+    private var locationsListener: ValueEventListener? = null
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -98,8 +118,7 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             return
         }
 
-        userName = getSharedPreferences("ChurrascoApp", MODE_PRIVATE)
-            .getString("userName", "") ?: ""
+        userName = AuthSession.userName(this)
 
         btnCancelChurrasco = findViewById<Button>(R.id.btnCancelChurrasco).apply {
             setOnClickListener { deleteChurrasco() }
@@ -111,22 +130,25 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             if (isSharingLocation) stopLocationSharing() else requestLocationSharing()
         }
 
+        findViewById<Button>(R.id.btnChangeParticipation).setOnClickListener {
+            startActivity(
+                Intent(this, ChurrascoDetailsActivity::class.java)
+                    .putExtra("churrascoId", churrascoId)
+            )
+        }
+
         setupLocationMap()
-        observeSharedLocations()
         setupChat()
         fetchChurrascoDetails()
     }
 
     private fun setupChat() {
         val scrollView = findViewById<ScrollView>(R.id.detailsScrollView)
-        val rvChat = findViewById<RecyclerView>(R.id.rvChat)
-        val txtChatEmpty = findViewById<TextView>(R.id.txtChatEmpty)
+        rvChat = findViewById(R.id.rvChat)
+        txtChatEmpty = findViewById(R.id.txtChatEmpty)
         val edtMessage = findViewById<EditText>(R.id.edtMessage)
         val btnSend = findViewById<Button>(R.id.btnSend)
-        val chatRef = FirebaseDatabase
-            .getInstance()
-            .getReference("churrascos/$churrascoId/messages")
-        val chatAdapter = ChatAdapter(userName)
+        chatAdapter = ChatAdapter(userName)
 
         rvChat.layoutManager = LinearLayoutManager(this).apply {
             stackFromEnd = true
@@ -140,26 +162,6 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         edtMessage.setOnClickListener {
             scrollToChatInput(scrollView)
         }
-
-        chatRef.addChildEventListener(object : ChildEventListener {
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                snapshot.getValue(Message::class.java)?.let { msg ->
-                    chatAdapter.addMessage(msg)
-                    txtChatEmpty.visibility = if (chatAdapter.isEmpty) View.VISIBLE else View.GONE
-                    rvChat.post {
-                        rvChat.smoothScrollToPosition(chatAdapter.itemCount - 1)
-                    }
-                }
-            }
-
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
-            override fun onChildRemoved(snapshot: DataSnapshot) {}
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
-
-            override fun onCancelled(error: DatabaseError) {
-                rootLayout.showErrorDialog("Nao conseguimos carregar a conversa agora.")
-            }
-        })
 
         btnSend.setOnClickListener {
             val text = edtMessage.text.toString().trim()
@@ -186,7 +188,9 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
                         edtMessage.text.clear()
                         rootLayout.showSnackbar("Mensagem enviada.")
                     } else {
-                        rootLayout.showErrorDialog(chatErrorMessage(response))
+                        rootLayout.showErrorDialog(
+                            response.apiMessage("Não conseguimos enviar a mensagem agora. Tente de novo.")
+                        )
                     }
                 }
 
@@ -199,17 +203,60 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             })
     }
 
-    private fun chatErrorMessage(response: Response<ApiResponse<Any>>): String {
-        response.body()?.message?.let { return it }
+    private fun attachRealtimeListeners() {
+        if (chatListener != null) return
+        val database = FirebaseDatabase.getInstance()
 
-        val rawError = response.errorBody()?.string().orEmpty()
-        if (rawError.isNotBlank()) {
-            runCatching {
-                JSONObject(rawError).optString("message")
-            }.getOrNull()?.takeIf { it.isNotBlank() }?.let { return it }
-        }
+        val messagesRef = database.getReference("churrascos/$churrascoId/messages")
+        chatRef = messagesRef
+        chatListener = messagesRef.addChildEventListener(object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                snapshot.getValue(Message::class.java)?.let { msg ->
+                    chatAdapter.addMessage(msg)
+                    txtChatEmpty.visibility = if (chatAdapter.isEmpty) View.VISIBLE else View.GONE
+                    rvChat.post {
+                        rvChat.smoothScrollToPosition(chatAdapter.itemCount - 1)
+                    }
+                }
+            }
 
-        return "Nao conseguimos enviar a mensagem agora. Tente de novo."
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onChildRemoved(snapshot: DataSnapshot) {}
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+
+            override fun onCancelled(error: DatabaseError) {
+                txtChatEmpty.visibility = View.VISIBLE
+                txtChatEmpty.text = "Não conseguimos carregar a conversa agora. Abra o churrasco de novo em instantes."
+            }
+        })
+
+        val sharedRef = database.getReference("churrascos/$churrascoId/locations")
+        locationsRef = sharedRef
+        locationsListener = sharedRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val now = System.currentTimeMillis()
+                // Sessões recém-abertas ainda não têm coordenadas (updatedAt = 0).
+                val locations = snapshot.children
+                    .mapNotNull { it.getValue(SharedLocation::class.java) }
+                    .filter { it.expiresAt > now && it.updatedAt > 0 }
+                    .sortedByDescending { it.updatedAt }
+
+                lastLocations = locations
+                bindSharedLocations(locations)
+                renderLocationsOnMap(locations)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                txtLocationStatus.text = "Não conseguimos carregar o mapa agora."
+            }
+        })
+    }
+
+    private fun detachRealtimeListeners() {
+        chatListener?.let { chatRef?.removeEventListener(it) }
+        locationsListener?.let { locationsRef?.removeEventListener(it) }
+        chatListener = null
+        locationsListener = null
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -229,30 +276,6 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             "UTF-8",
             null
         )
-    }
-
-    private fun observeSharedLocations() {
-        FirebaseDatabase
-            .getInstance()
-            .getReference("churrascos/$churrascoId/locations")
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val now = System.currentTimeMillis()
-                    val locations = snapshot.children
-                        .mapNotNull { it.getValue(SharedLocation::class.java) }
-                        .filter { it.expiresAt > now }
-                        .sortedByDescending { it.updatedAt }
-
-                    lastLocations = locations
-                    bindSharedLocations(locations)
-                    renderLocationsOnMap(locations)
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    txtLocationStatus.text =
-                        "Nao conseguimos carregar o mapa agora. Confira as regras do Firebase."
-                }
-            })
     }
 
     private fun requestLocationSharing() {
@@ -283,11 +306,8 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun startLocationSharing() {
         val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        locationManager = manager
-
         val providers = listOf(
             LocationManager.NETWORK_PROVIDER,
             LocationManager.GPS_PROVIDER
@@ -300,13 +320,59 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             return
         }
 
+        // O servidor abre a sessão (e o prazo dela) antes de aceitar coordenadas.
+        btnShareLocation.isEnabled = false
+        RetrofitClient.instance
+            .startLocationSession(churrascoId)
+            .enqueue(object : Callback<LocationSessionResponse> {
+                override fun onResponse(
+                    call: Call<LocationSessionResponse>,
+                    response: Response<LocationSessionResponse>
+                ) {
+                    btnShareLocation.isEnabled = true
+                    val session = response.body()
+                    val sessionId = session?.sessionId
+                    if (!response.isSuccessful || session?.success != true || sessionId == null) {
+                        rootLayout.showErrorDialog(
+                            response.apiMessage("Não conseguimos iniciar o compartilhamento agora.")
+                        )
+                        return
+                    }
+                    if (isFinishing || isDestroyed) return
+                    startLocationUpdates(manager, providers, sessionId, session.expiresAt)
+                }
+
+                override fun onFailure(call: Call<LocationSessionResponse>, t: Throwable) {
+                    btnShareLocation.isEnabled = true
+                    rootLayout.showErrorDialog(
+                        "Não conseguimos iniciar o compartilhamento. Confira sua internet e tente de novo."
+                    )
+                }
+            })
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates(
+        manager: LocationManager,
+        providers: List<String>,
+        sessionId: String,
+        expiresAt: Long
+    ) {
+        locationManager = manager
+        locationSessionId = sessionId
+
         val listener = LocationListener { location ->
             sendLocation(location)
         }
         locationListener = listener
         isSharingLocation = true
         btnShareLocation.text = "Parar compartilhamento"
-        txtLocationStatus.text = "Compartilhando sua localização por até 2 horas."
+        txtLocationStatus.text =
+            "Compartilhando sua localização até ${timeText(expiresAt)}. Mantenha o app aberto para o mapa continuar atualizando."
+
+        sessionExpiryHandler.removeCallbacks(sessionExpiry)
+        val remaining = expiresAt - System.currentTimeMillis()
+        if (remaining > 0) sessionExpiryHandler.postDelayed(sessionExpiry, remaining)
 
         providers.forEach { provider ->
             manager.requestLocationUpdates(provider, 30_000L, 20f, listener)
@@ -314,14 +380,21 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun stopLocationSharing() {
+    /** Para o GPS deste aparelho; [message] explica o porquê na tela. */
+    private fun endLocalSharing(message: String) {
         locationListener?.let { listener ->
             locationManager?.removeUpdates(listener)
         }
+        sessionExpiryHandler.removeCallbacks(sessionExpiry)
         locationListener = null
+        locationSessionId = null
         isSharingLocation = false
         btnShareLocation.text = "Estou a caminho"
-        txtLocationStatus.text = "Compartilhamento encerrado."
+        txtLocationStatus.text = message
+    }
+
+    private fun stopLocationSharing() {
+        endLocalSharing("Compartilhamento encerrado.")
 
         RetrofitClient.instance
             .stopLocationSharing(churrascoId)
@@ -338,12 +411,14 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     }
 
     private fun sendLocation(location: Location) {
+        val sessionId = locationSessionId ?: return
         RetrofitClient.instance
             .shareLocation(
                 churrascoId,
                 LocationUpdateRequest(
                     latitude = location.latitude,
-                    longitude = location.longitude
+                    longitude = location.longitude,
+                    sessionId = sessionId
                 )
             )
             .enqueue(object : Callback<ApiResponse<Any>> {
@@ -351,9 +426,13 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
                     call: Call<ApiResponse<Any>>,
                     response: Response<ApiResponse<Any>>
                 ) {
-                    if (!response.isSuccessful || response.body()?.success != true) {
-                        txtLocationStatus.text =
-                            response.body()?.message ?: "Não conseguimos atualizar sua localização."
+                    if (response.isSuccessful && response.body()?.success == true) return
+                    val message = response.apiMessage("Não conseguimos atualizar sua localização.")
+                    // 410: a sessão acabou ou foi encerrada em outro aparelho; 403: a janela do evento fechou.
+                    if (response.code() == 410 || response.code() == 403) {
+                        if (locationSessionId == sessionId) endLocalSharing(message)
+                    } else {
+                        txtLocationStatus.text = message
                     }
                 }
 
@@ -366,6 +445,7 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     private fun updateLocationAvailability(churrasco: Churrasco, canParticipate: Boolean) {
         val isOpen = locationSharingWindowIsOpen(churrasco)
         btnShareLocation.isEnabled = canParticipate && isOpen
+        if (isSharingLocation) return
 
         txtLocationStatus.text = when {
             !canParticipate -> "Confirme presença antes de aparecer no mapa."
@@ -426,7 +506,8 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     }
 
     private fun locationSharingWindowIsOpen(churrasco: Churrasco): Boolean {
-        val eventTime = ChurrascoDateUtils.eventDateTimeMillis(
+        // Mesma referência do servidor, mesmo com o celular em outro fuso.
+        val eventTime = churrasco.eventStartsAt ?: ChurrascoDateUtils.eventDateTimeMillis(
             churrasco.churrascoDate,
             churrasco.hora
         ) ?: return true
@@ -437,6 +518,9 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
 
         return now in opensAt..closesAt
     }
+
+    private fun timeText(millis: Long): String =
+        SimpleDateFormat("HH:mm", Locale("pt", "BR")).format(Date(millis))
 
     private fun seenText(updatedAt: Long): String {
         val minutes = ((System.currentTimeMillis() - updatedAt) / 60_000.0).roundToInt()
@@ -479,9 +563,16 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
               }
               const bounds = [];
               locations.forEach(item => {
+                // Nomes vêm de outras pessoas: texto puro, nunca HTML.
+                const popup = document.createElement('div');
+                const name = document.createElement('b');
+                name.textContent = item.name;
+                popup.appendChild(name);
+                popup.appendChild(document.createElement('br'));
+                popup.appendChild(document.createTextNode(item.seen));
                 const marker = L.marker([item.lat, item.lng])
                   .addTo(map)
-                  .bindPopup('<b>' + item.name + '</b><br>' + item.seen);
+                  .bindPopup(popup);
                 markers.push(marker);
                 bounds.push([item.lat, item.lng]);
               });
@@ -578,6 +669,8 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         val canUseLocation = isCreator || isConfirmed
 
         creatorActionsContainer.visibility = if (isCreator) View.VISIBLE else View.GONE
+        findViewById<Button>(R.id.btnChangeParticipation).visibility =
+            if (!isCreator && isConfirmed) View.VISIBLE else View.GONE
         if (isCreator) {
             statusCard.setBackgroundResource(R.drawable.bg_status_info)
             txtUserRole.text = "Voce e o organizador"
@@ -593,6 +686,11 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         }
 
         updateLocationAvailability(churrasco, canUseLocation)
+        if (canUseLocation) {
+            attachRealtimeListeners()
+        } else {
+            txtChatEmpty.text = "Confirme presença para ver e participar da conversa."
+        }
 
         findViewById<TextView>(R.id.txtDetalhesEvento).text = buildString {
             append("Criado por: ${churrasco.createdBy}\n")
@@ -681,11 +779,11 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
     private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
 
     override fun onDestroy() {
-        if (isSharingLocation) {
-            locationListener?.let { listener ->
-                locationManager?.removeUpdates(listener)
-            }
+        locationListener?.let { listener ->
+            locationManager?.removeUpdates(listener)
         }
+        sessionExpiryHandler.removeCallbacks(sessionExpiry)
+        detachRealtimeListeners()
         super.onDestroy()
     }
 }
