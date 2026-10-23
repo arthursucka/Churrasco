@@ -72,13 +72,30 @@ def shot(name):
 # --- Tela ----------------------------------------------------------------
 
 def dump():
-    for _ in range(4):
+    for _ in range(6):
         adb("shell", "uiautomator", "dump", "/sdcard/ui.xml", check=False)
         xml = adb("shell", "cat", "/sdcard/ui.xml", check=False)
         if "<hierarchy" in xml:
-            return ET.fromstring(xml[xml.index("<hierarchy"):])
+            root = ET.fromstring(xml[xml.index("<hierarchy"):])
+            if dismiss_system_dialog(root):
+                continue
+            return root
         time.sleep(1)
     raise RuntimeError("uiautomator dump falhou")
+
+
+def dismiss_system_dialog(root):
+    """Emuladores lentos às vezes mostram "X isn't responding" de apps do sistema."""
+    texts = [n.get("text") or "" for n in root.iter("node")]
+    if not any("isn't responding" in t or "não está respondendo" in t for t in texts):
+        return False
+    for n in root.iter("node"):
+        if n.get("text") in ("Wait", "Aguardar"):
+            a, b, c, d = map(int, re.findall(r"\d+", n.get("bounds")))
+            adb("shell", "input", "tap", str((a + c) // 2), str((b + d) // 2))
+            time.sleep(2)
+            return True
+    return False
 
 
 def nodes(root):
@@ -238,6 +255,8 @@ def launch():
 
 def install_fresh():
     adb("shell", "settings", "put", "secure", "show_ime_with_hard_keyboard", "0")
+    # Sem diálogos de "não está respondendo" de apps do sistema no emulador de teste.
+    adb("shell", "settings", "put", "global", "hide_error_dialogs", "1", check=False)
     adb("uninstall", PKG, check=False)
     adb("install", "-r", "-g", APK)
 

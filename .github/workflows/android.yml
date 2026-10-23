@@ -136,7 +136,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: cd e2e && FCM_SERVER_DIR=../../fcm-server python drive.py
+          script: sleep 45 && cd e2e && FCM_SERVER_DIR=../../fcm-server python drive.py
 
       - name: Capturas e logs
         if: always()
