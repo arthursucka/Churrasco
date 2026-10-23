@@ -150,6 +150,23 @@
                         android:layout_marginTop="10dp"
                         android:text="@string/login_create_account" />
 
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:text="@string/login_or"
+                        android:textColor="@color/mainMuted"
+                        android:textSize="13sp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGoogle"
+                        style="@style/Churrasco.Button.Secondary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/login_google" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnForgotPassword"
                         style="@style/Churrasco.Button.Text"

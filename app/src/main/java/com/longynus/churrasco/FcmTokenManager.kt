@@ -1,56 +1,28 @@
 package com.longynus.churrasco
 
 import android.content.Context
-import android.util.Log
-import com.google.firebase.messaging.FirebaseMessaging
-import com.longynus.churrasco.model.LoginRequest
-import com.longynus.churrasco.model.Usuario
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.longynus.churrasco.data.ChurrascoRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
+/** Mantém o token de notificação do aparelho atualizado no perfil. */
 object FcmTokenManager {
-    private const val TAG = "FcmTokenManager"
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun syncCurrentToken(context: Context) {
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                Log.w(TAG, "Não foi possível obter token FCM", task.exception)
-                return@addOnCompleteListener
-            }
-
-            syncToken(context, task.result)
-        }
+        val app = context.applicationContext
+        scope.launch { AuthSession.currentFcmToken()?.let { syncToken(app, it) } }
     }
 
     fun syncToken(context: Context, token: String) {
-        val appContext = context.applicationContext
-
-        if (!AuthSession.isReady(appContext)) {
-            Log.d(TAG, "Token recebido antes do login; sincronização adiada.")
-            return
+        val app = context.applicationContext
+        if (!AuthSession.isReady(app) || AuthSession.lastFcmToken(app) == token) return
+        scope.launch {
+            ChurrascoRepository.login(token).onSuccess {
+                AuthSession.saveProfile(app, it, token)
+            }
         }
-
-        if (AuthSession.lastFcmToken(appContext) == token) {
-            return
-        }
-
-        RetrofitClient.instance.login(LoginRequest(fcmToken = token))
-            .enqueue(object : Callback<ApiResponse<Usuario>> {
-                override fun onResponse(
-                    call: Call<ApiResponse<Usuario>>,
-                    response: Response<ApiResponse<Usuario>>
-                ) {
-                    if (response.isSuccessful && response.body()?.success == true) {
-                        AuthSession.rememberFcmToken(appContext, token)
-                    } else {
-                        Log.w(TAG, "Falha ao sincronizar token FCM: ${response.code()}")
-                    }
-                }
-
-                override fun onFailure(call: Call<ApiResponse<Usuario>>, t: Throwable) {
-                    Log.w(TAG, "Erro de rede ao sincronizar token FCM", t)
-                }
-            })
     }
 }

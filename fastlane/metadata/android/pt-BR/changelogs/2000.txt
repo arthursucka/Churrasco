@@ -1,0 +1,1 @@
+Churrasco 2.0: vários amigos podem levar a mesma categoria com detalhes (corte, kg, tempero) ou "Outro"; convite por link e lista de amigos; contas divididas com Pix; mapa nativo que funciona com a tela bloqueada; Maps e Waze; lembretes; login com Google.

@@ -1,789 +1,582 @@
 package com.longynus.churrasco
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.content.Context
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
+import android.graphics.Bitmap
+import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.text.InputType
+import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import android.widget.Button
-import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ChildEventListener
-import com.longynus.churrasco.adapter.ChatAdapter
-import com.longynus.churrasco.model.ChatMessageRequest
-import com.longynus.churrasco.model.Churrasco
-import com.longynus.churrasco.model.LocationSessionResponse
-import com.longynus.churrasco.model.LocationUpdateRequest
-import com.longynus.churrasco.model.Message
-import com.longynus.churrasco.model.SharedLocation
-import org.json.JSONArray
-import org.json.JSONObject
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
+import com.longynus.churrasco.data.ApiError
+import com.longynus.churrasco.data.ChurrascoRepository
+import com.longynus.churrasco.data.model.Balance
+import com.longynus.churrasco.data.model.ChatMessage
+import com.longynus.churrasco.data.model.Event
+import com.longynus.churrasco.data.model.SharedLocation
+import com.longynus.churrasco.data.model.Transfer
+import com.longynus.churrasco.details.EventDetailsViewModel
+import com.longynus.churrasco.details.Money
+import com.longynus.churrasco.invites.InviteLinkActivity
+import com.longynus.churrasco.items.ContributionsActivity
+import com.longynus.churrasco.items.ItemCatalog
+import com.longynus.churrasco.location.LocationShareService
+import com.longynus.churrasco.pix.PixPayload
+import com.longynus.churrasco.reminders.ReminderScheduler
+import com.longynus.churrasco.ui.ScreenActivity
+import com.longynus.churrasco.ui.TextRole
+import com.longynus.churrasco.ui.Tone
+import com.longynus.churrasco.ui.banner
+import com.longynus.churrasco.ui.buttonRow
+import com.longynus.churrasco.ui.card
+import com.longynus.churrasco.ui.dp
+import com.longynus.churrasco.ui.primaryButton
+import com.longynus.churrasco.ui.row
+import com.longynus.churrasco.ui.secondaryButton
+import com.longynus.churrasco.ui.section
+import com.longynus.churrasco.ui.text
+import com.longynus.churrasco.ui.textButton
+import com.longynus.churrasco.ui.textField
+import com.longynus.churrasco.ui.visible
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.math.roundToInt
 
-class ActiveChurrascoDetailsActivity : AppCompatActivity() {
+/**
+ * Centro do churrasco: convite, quem vai, quem leva o quê, contas com Pix, mapa ao vivo
+ * e conversa. Cada seção é atualizada sozinha, então o mapa e o texto do chat não se
+ * perdem quando os dados mudam.
+ */
+class ActiveChurrascoDetailsActivity : ScreenActivity() {
 
+    companion object {
+        const val EXTRA_JUST_CREATED = "justCreated"
+        private const val HOUR = 3_600_000L
+    }
+
+    private val vm: EventDetailsViewModel by viewModels()
     private lateinit var churrascoId: String
-    private lateinit var userName: String
-    private lateinit var rootLayout: View
-    private lateinit var btnCancelChurrasco: Button
-    private lateinit var creatorActionsContainer: LinearLayout
-    private lateinit var txtUserRole: TextView
-    private lateinit var tvStatusDescription: TextView
-    private lateinit var statusCard: LinearLayout
-    private lateinit var btnShareLocation: Button
-    private lateinit var txtLocationStatus: TextView
-    private lateinit var containerLocations: LinearLayout
-    private lateinit var locationMap: WebView
+    private val myUid by lazy { AuthSession.uid(this) }
 
-    private var currentChurrasco: Churrasco? = null
-    private var locationManager: LocationManager? = null
-    private var locationListener: LocationListener? = null
-    private var isSharingLocation = false
-    private var locationSessionId: String? = null
-    private val sessionExpiryHandler = Handler(Looper.getMainLooper())
-    private val sessionExpiry = Runnable { endLocalSharing("O tempo de compartilhamento acabou.") }
-    private var mapReady = false
-    private var lastLocations: List<SharedLocation> = emptyList()
+    private lateinit var headerSection: LinearLayout
+    private lateinit var statusSection: LinearLayout
+    private lateinit var peopleSection: LinearLayout
+    private lateinit var itemsSection: LinearLayout
+    private lateinit var costsSection: LinearLayout
+    private lateinit var mapSection: LinearLayout
+    private lateinit var chatSection: LinearLayout
+    private lateinit var adminSection: LinearLayout
+    private lateinit var messagesBox: LinearLayout
+    private lateinit var mapView: MapView
+    private lateinit var mapStatus: TextView
+    private lateinit var shareLocationButton: com.google.android.material.button.MaterialButton
+    private var askedToShare = false
 
-    // O Realtime Database só libera leitura para quem participa (regra eventAccess),
-    // então os listeners entram depois de confirmar o papel da pessoa no evento.
-    private lateinit var chatAdapter: ChatAdapter
-    private lateinit var rvChat: RecyclerView
-    private lateinit var txtChatEmpty: TextView
-    private var chatRef: DatabaseReference? = null
-    private var chatListener: ChildEventListener? = null
-    private var locationsRef: DatabaseReference? = null
-    private var locationsListener: ValueEventListener? = null
+    private val refreshOnReturn = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { vm.refresh() }
 
-    private val locationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-
-        if (granted) {
-            startLocationSharing()
+    private val locationPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        if (granted[Manifest.permission.ACCESS_FINE_LOCATION] == true || granted[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+            startSharing()
         } else {
-            rootLayout.showErrorDialog("Para aparecer no mapa, permita o acesso à sua localização.")
+            showMessage(getString(R.string.map_permission_denied))
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_active_churrasco_details)
-        TopBarHelper.setup(this, getString(R.string.details_event_title))
-        BottomNavHelper.setup(this, R.id.nav_active)
-        KeyboardInsetsHelper.setup(this, hideBottomNavigation = true)
-
-        rootLayout = findViewById(R.id.rootLayout)
-        creatorActionsContainer = findViewById(R.id.creatorActionsContainer)
-        txtUserRole = findViewById(R.id.txtUserRole)
-        tvStatusDescription = findViewById(R.id.tvStatusDescription)
-        statusCard = findViewById(R.id.statusCard)
-        btnShareLocation = findViewById(R.id.btnShareLocation)
-        txtLocationStatus = findViewById(R.id.txtLocationStatus)
-        containerLocations = findViewById(R.id.containerLocations)
-        locationMap = findViewById(R.id.locationMap)
-
-        churrascoId = intent.getStringExtra("churrascoId") ?: run {
-            finish()
-            return
+        churrascoId = intent.getStringExtra("churrascoId") ?: return finish()
+        Configuration.getInstance().apply {
+            load(this@ActiveChurrascoDetailsActivity, getSharedPreferences("osmdroid", MODE_PRIVATE))
+            // Política de uso dos mapas do OpenStreetMap: identificar o app.
+            userAgentValue = "Churrasco/${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})"
         }
+        setupScreen(getString(R.string.details_event_title), onRefresh = vm::refresh)
+        buildSkeleton()
 
-        userName = AuthSession.userName(this)
-
-        btnCancelChurrasco = findViewById<Button>(R.id.btnCancelChurrasco).apply {
-            setOnClickListener { deleteChurrasco() }
+        collect(vm.event) { it?.let(::bindEvent) }
+        collect(vm.balance) { bindCosts(vm.event.value, it) }
+        collect(vm.messages) { bindMessages(it) }
+        collect(vm.locations) { bindLocations(it) }
+        collect(vm.loading) { if (it) root.showLoading() else root.hideLoading() }
+        collect(vm.errors) { error ->
+            stopRefreshing()
+            if ((error as? ApiError)?.status == 404) {
+                AlertDialog.Builder(this).setMessage(R.string.details_not_found).setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
+            } else showError(error) { vm.refresh() }
         }
-        findViewById<Button>(R.id.btnJumpToChat).setOnClickListener {
-            scrollToChatSection()
-        }
-        btnShareLocation.setOnClickListener {
-            if (isSharingLocation) stopLocationSharing() else requestLocationSharing()
-        }
-
-        findViewById<Button>(R.id.btnChangeParticipation).setOnClickListener {
-            startActivity(
-                Intent(this, ChurrascoDetailsActivity::class.java)
-                    .putExtra("churrascoId", churrascoId)
-            )
-        }
-
-        setupLocationMap()
-        setupChat()
-        fetchChurrascoDetails()
+        collect(LocationShareService.state) { bindSharingState() }
+        vm.start(churrascoId)
     }
 
-    private fun setupChat() {
-        val scrollView = findViewById<ScrollView>(R.id.detailsScrollView)
-        rvChat = findViewById(R.id.rvChat)
-        txtChatEmpty = findViewById(R.id.txtChatEmpty)
-        val edtMessage = findViewById<EditText>(R.id.edtMessage)
-        val btnSend = findViewById<Button>(R.id.btnSend)
-        chatAdapter = ChatAdapter(userName)
+    override fun onResume() {
+        super.onResume()
+        if (::mapView.isInitialized) mapView.onResume()
+    }
 
-        rvChat.layoutManager = LinearLayoutManager(this).apply {
-            stackFromEnd = true
-        }
-        rvChat.adapter = chatAdapter
-        txtChatEmpty.visibility = View.VISIBLE
+    override fun onPause() {
+        if (::mapView.isInitialized) mapView.onPause()
+        super.onPause()
+    }
 
-        edtMessage.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) scrollToChatInput(scrollView)
-        }
-        edtMessage.setOnClickListener {
-            scrollToChatInput(scrollView)
-        }
+    // --- Esqueleto ---------------------------------------------------------------
 
-        btnSend.setOnClickListener {
-            val text = edtMessage.text.toString().trim()
-            if (text.isEmpty()) {
-                rootLayout.showSnackbar("Digite uma mensagem antes de enviar.")
-                return@setOnClickListener
+    private fun buildSkeleton() = render {
+        headerSection = holder()
+        statusSection = holder()
+        adminSection = holder()
+        peopleSection = holder()
+        itemsSection = holder()
+        costsSection = holder()
+        mapSection = holder().apply { visible(false) }
+        chatSection = holder().apply { visible(false) }
+
+        mapSection.apply {
+            section(getString(R.string.map_title), getString(R.string.map_subtitle))
+            card(top = 12) {
+                mapView = MapView(context).apply {
+                    setTileSource(TileSourceFactory.MAPNIK)
+                    setMultiTouchControls(true)
+                    controller.setZoom(4.0)
+                    controller.setCenter(GeoPoint(-14.235, -51.925))
+                    // Dentro de um ScrollView: o mapa fica com os gestos enquanto o dedo está nele.
+                    setOnTouchListener { v, _ -> v.parent.requestDisallowInterceptTouchEvent(true); false }
+                }
+                addView(FrameLayout(context).apply {
+                    clipToOutline = true
+                    setBackgroundResource(R.drawable.bg_create_chip)
+                    addView(mapView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, context.dp(240)))
+                })
+                mapStatus = text("", TextRole.Caption, top = 12)
+                shareLocationButton = primaryButton(getString(R.string.map_share)) { toggleSharing() }
             }
+        }
 
-            sendChatMessage(text, btnSend, edtMessage)
+        chatSection.apply {
+            section(getString(R.string.details_chat_title), getString(R.string.chat_subtitle))
+            card(top = 12) {
+                messagesBox = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+                addView(messagesBox)
+                val input = textField(getString(R.string.details_chat_hint), maxLength = 500, top = 16)
+                primaryButton(getString(R.string.cd_send_message)) {
+                    val text = input.text.toString().trim()
+                    if (text.isEmpty()) return@primaryButton
+                    call({ ChurrascoRepository.sendMessage(churrascoId, text) }, silent = true) { input.text?.clear() }
+                }
+            }
         }
     }
 
-    private fun sendChatMessage(text: String, btnSend: Button, edtMessage: EditText) {
-        btnSend.isEnabled = false
-        RetrofitClient.instance
-            .sendChatMessage(churrascoId, ChatMessageRequest(text))
-            .enqueue(object : Callback<ApiResponse<Any>> {
-                override fun onResponse(
-                    call: Call<ApiResponse<Any>>,
-                    response: Response<ApiResponse<Any>>
-                ) {
-                    btnSend.isEnabled = true
-                    if (response.isSuccessful && response.body()?.success == true) {
-                        edtMessage.text.clear()
-                        rootLayout.showSnackbar("Mensagem enviada.")
-                    } else {
-                        rootLayout.showErrorDialog(
-                            response.apiMessage("Não conseguimos enviar a mensagem agora. Tente de novo.")
-                        )
+    private fun LinearLayout.holder(): LinearLayout =
+        LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }.also(::addView)
+
+    // --- Dados -----------------------------------------------------------------------
+
+    private fun bindEvent(event: Event) {
+        stopRefreshing()
+        setTitleText(if (event.myStatus == "invited") getString(R.string.details_invite_title) else getString(R.string.details_event_title))
+        bindHeader(event)
+        bindStatus(event)
+        bindAdmin(event)
+        bindPeople(event)
+        bindItems(event)
+        bindCosts(event, vm.balance.value)
+        mapSection.visible(event.isMember)
+        chatSection.visible(event.isMember)
+        bindSharingState()
+        ReminderScheduler.sync(this, listOf(event))
+
+        if (intent.getBooleanExtra(EXTRA_JUST_CREATED, false) && !askedToShare) {
+            askedToShare = true
+            AlertDialog.Builder(this)
+                .setTitle(R.string.created_title)
+                .setMessage(R.string.created_body)
+                .setNegativeButton(R.string.later, null)
+                .setPositiveButton(R.string.invite_share_action) { _, _ -> shareInvite(event) }
+                .show()
+        }
+    }
+
+    private fun whenText(event: Event) = ChurrascoDateUtils.eventDateTime(event.churrascoDate, event.hora)
+
+    private fun bindHeader(event: Event) = headerSection.apply {
+        removeAllViews()
+        text(getString(R.string.details_heading, event.organizer.displayName), TextRole.Title)
+        card(top = 16) {
+            row("📅", whenText(event), getString(R.string.details_timezone), top = 0)
+            row("📍", event.local, event.address.ifBlank { null })
+            val query = event.address.ifBlank { event.local }
+            buttonRow(top = 16) {
+                secondaryButton(getString(R.string.details_open_maps), top = 0) { openMaps(query) }
+                secondaryButton(getString(R.string.details_open_waze), top = 0) { openWaze(query) }
+            }
+        }
+    }
+
+    private fun bindStatus(event: Event) = statusSection.apply {
+        removeAllViews()
+        when (event.myStatus) {
+            "invited" -> banner(getString(R.string.status_invited_title), getString(R.string.status_invited_body), Tone.Warning, top = 16).apply {
+                primaryButton(getString(R.string.status_accept)) { openContributions() }
+                secondaryButton(getString(R.string.status_decline)) { decline(event) }
+            }
+            "declined" -> banner(getString(R.string.status_declined_title), getString(R.string.status_declined_body), Tone.Error, top = 16).apply {
+                primaryButton(getString(R.string.status_changed_mind)) { openContributions() }
+            }
+            "confirmed" -> banner(getString(R.string.status_confirmed_title), getString(R.string.status_confirmed_body), Tone.Success, top = 16).apply {
+                secondaryButton(getString(R.string.status_change_items)) { openContributions() }
+                textButton(getString(R.string.status_cancel_presence), danger = true) { decline(event) }
+            }
+            "organizer" -> banner(getString(R.string.status_organizer_title), getString(R.string.status_organizer_body), Tone.Info, top = 16).apply {
+                secondaryButton(getString(R.string.status_organizer_items)) { openContributions() }
+            }
+            else -> banner(getString(R.string.status_admin_title), null, Tone.Info, top = 16)
+        }
+    }
+
+    private fun bindAdmin(event: Event) = adminSection.apply {
+        removeAllViews()
+        if (!event.isMember && !event.canEdit) return@apply
+        card(top = 16) {
+            if (event.isMember) primaryButton(getString(R.string.invite_share_action), top = 0) { shareInvite(event) }
+            if (event.canEdit) {
+                secondaryButton(getString(R.string.details_edit), top = if (event.isMember) 8 else 0) {
+                    refreshOnReturn.launch(Intent(this@ActiveChurrascoDetailsActivity, EventFormActivity::class.java).putExtra(EventFormActivity.EXTRA_ID, event.id))
+                }
+                textButton(getString(R.string.details_cancel_event), danger = true) { cancelEvent() }
+            }
+        }
+    }
+
+    private fun bindPeople(event: Event) = peopleSection.apply {
+        removeAllViews()
+        val going = 1 + event.confirmed.size
+        section(getString(R.string.people_title, going), getString(R.string.people_subtitle, event.pending.size, event.declined.size))
+        card(top = 12) {
+            row("👑", event.organizer.displayName, getString(R.string.people_organizer), top = 0)
+            event.confirmed.forEach { row("✅", it.displayName, getString(R.string.people_confirmed)) }
+            event.pending.forEach { row("⏳", it.displayName, getString(R.string.people_pending)) }
+            event.declined.forEach { row("🙅", it.displayName, getString(R.string.people_declined)) }
+        }
+    }
+
+    private fun bindItems(event: Event) = itemsSection.apply {
+        removeAllViews()
+        section(getString(R.string.items_who_brings), getString(R.string.items_who_brings_subtitle))
+        if (event.contributions.isEmpty()) {
+            card(top = 12, background = R.drawable.bg_empty_state) {
+                text(getString(R.string.items_nobody_yet), TextRole.Muted).gravity = Gravity.CENTER
+            }
+            return@apply
+        }
+        event.contributions.groupBy { ItemCatalog.find(it.category)?.name ?: it.category }
+            .toSortedMap(compareBy { name -> ItemCatalog.categories.indexOfFirst { it.name == name }.let { if (it < 0) Int.MAX_VALUE else it } })
+            .forEach { (category, list) ->
+                card(top = 12) {
+                    text("${ItemCatalog.emoji(category)}  ${ItemCatalog.label(category)}", TextRole.Section)
+                    list.forEach { c ->
+                        val label = ItemCatalog.summary(c).ifBlank { if (ItemCatalog.find(c.category)?.name != c.category) c.category else getString(R.string.items_no_details) }
+                        row(c.displayName.take(1).uppercase(), c.displayName, label, top = 12)
                     }
                 }
-
-                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
-                    btnSend.isEnabled = true
-                    rootLayout.showErrorDialog(
-                        "Nao conseguimos enviar a mensagem agora. Confira sua internet e tente de novo."
-                    )
-                }
-            })
+            }
     }
 
-    private fun attachRealtimeListeners() {
-        if (chatListener != null) return
-        val database = FirebaseDatabase.getInstance()
+    // --- Contas -------------------------------------------------------------------------
 
-        val messagesRef = database.getReference("churrascos/$churrascoId/messages")
-        chatRef = messagesRef
-        chatListener = messagesRef.addChildEventListener(object : ChildEventListener {
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                snapshot.getValue(Message::class.java)?.let { msg ->
-                    chatAdapter.addMessage(msg)
-                    txtChatEmpty.visibility = if (chatAdapter.isEmpty) View.VISIBLE else View.GONE
-                    rvChat.post {
-                        rvChat.smoothScrollToPosition(chatAdapter.itemCount - 1)
+    private fun bindCosts(event: Event?, balance: Balance?) {
+        costsSection.removeAllViews()
+        if (event == null || !event.isMember) return
+        costsSection.apply {
+            section(getString(R.string.costs_title), getString(R.string.costs_subtitle))
+            card(top = 12) {
+                if (balance == null || balance.totalCents == 0L) {
+                    text(getString(R.string.costs_empty), TextRole.Muted)
+                } else {
+                    text(Money.format(balance.totalCents), TextRole.Title)
+                    text(getString(R.string.costs_total, balance.members, Money.format(balance.shareCents)), TextRole.Caption, top = 4)
+                    val mine = balance.transfers.filter { it.from.uid == myUid }
+                    val toMe = balance.transfers.filter { it.to.uid == myUid }
+                    when {
+                        mine.isNotEmpty() -> mine.forEach { transferRow(it, payer = true) }
+                        toMe.isNotEmpty() -> toMe.forEach { transferRow(it, payer = false) }
+                        else -> text(getString(R.string.costs_you_are_even), TextRole.Strong, top = 16)
+                    }
+                    val others = balance.transfers.filter { it.from.uid != myUid && it.to.uid != myUid }
+                    if (others.isNotEmpty()) {
+                        text(getString(R.string.costs_others), TextRole.Caption, top = 16)
+                        others.forEach { row("💸", "${it.from.displayName} → ${it.to.displayName}", null, Money.format(it.amountCents), top = 8) }
                     }
                 }
+                primaryButton(getString(R.string.costs_add)) { addExpense() }
             }
-
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {}
-            override fun onChildRemoved(snapshot: DataSnapshot) {}
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
-
-            override fun onCancelled(error: DatabaseError) {
-                txtChatEmpty.visibility = View.VISIBLE
-                txtChatEmpty.text = "Não conseguimos carregar a conversa agora. Abra o churrasco de novo em instantes."
-            }
-        })
-
-        val sharedRef = database.getReference("churrascos/$churrascoId/locations")
-        locationsRef = sharedRef
-        locationsListener = sharedRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val now = System.currentTimeMillis()
-                // Sessões recém-abertas ainda não têm coordenadas (updatedAt = 0).
-                val locations = snapshot.children
-                    .mapNotNull { it.getValue(SharedLocation::class.java) }
-                    .filter { it.expiresAt > now && it.updatedAt > 0 }
-                    .sortedByDescending { it.updatedAt }
-
-                lastLocations = locations
-                bindSharedLocations(locations)
-                renderLocationsOnMap(locations)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                txtLocationStatus.text = "Não conseguimos carregar o mapa agora."
-            }
-        })
-    }
-
-    private fun detachRealtimeListeners() {
-        chatListener?.let { chatRef?.removeEventListener(it) }
-        locationsListener?.let { locationsRef?.removeEventListener(it) }
-        chatListener = null
-        locationsListener = null
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun setupLocationMap() {
-        locationMap.settings.javaScriptEnabled = true
-        locationMap.settings.domStorageEnabled = true
-        locationMap.webViewClient = object : WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) {
-                mapReady = true
-                renderLocationsOnMap(lastLocations)
+            if (event.expenses.isNotEmpty()) {
+                card(top = 12) {
+                    text(getString(R.string.costs_expenses_title), TextRole.Strong)
+                    event.expenses.forEach { expense ->
+                        val canDelete = expense.uid == myUid || event.canEdit
+                        row("🧾", expense.description, expense.displayName, Money.format(expense.amountCents), top = 12,
+                            onClick = if (canDelete) ({ removeExpense(expense.id, expense.description) }) else null)
+                    }
+                    text(getString(R.string.costs_delete_hint), TextRole.Caption, top = 8)
+                }
             }
         }
-        locationMap.loadDataWithBaseURL(
-            "https://unpkg.com/",
-            mapHtml(),
-            "text/html",
-            "UTF-8",
-            null
-        )
     }
 
-    private fun requestLocationSharing() {
-        val churrasco = currentChurrasco
-        if (churrasco != null && !locationSharingWindowIsOpen(churrasco)) {
-            rootLayout.showErrorDialog("O mapa libera 1 hora antes do churrasco.")
-            return
-        }
-
-        val hasFine = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val hasCoarse = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasFine || hasCoarse) {
-            startLocationSharing()
+    private fun LinearLayout.transferRow(transfer: Transfer, payer: Boolean) {
+        if (payer) {
+            text(getString(R.string.costs_you_owe, Money.format(transfer.amountCents), transfer.to.displayName), TextRole.Strong, top = 16)
+            val key = transfer.to.pixKey
+            if (key.isNullOrBlank()) {
+                text(getString(R.string.costs_no_pix_key, transfer.to.displayName), TextRole.Caption, top = 4)
+            } else {
+                secondaryButton(getString(R.string.costs_pay_pix)) { showPix(transfer, key) }
+            }
         } else {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            text(getString(R.string.costs_owes_you, transfer.from.displayName, Money.format(transfer.amountCents)), TextRole.Strong, top = 16)
+            if (AuthSession.pixKey(this@ActiveChurrascoDetailsActivity).isNullOrBlank()) {
+                text(getString(R.string.costs_add_your_key), TextRole.Caption, top = 4)
+            }
         }
     }
 
-    private fun startLocationSharing() {
-        val manager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val providers = listOf(
-            LocationManager.NETWORK_PROVIDER,
-            LocationManager.GPS_PROVIDER
-        ).filter { provider ->
-            runCatching { manager.isProviderEnabled(provider) }.getOrDefault(false)
+    private fun addExpense() {
+        val form = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(8), dp(24), 0)
         }
-
-        if (providers.isEmpty()) {
-            rootLayout.showErrorDialog("Ative a localização do celular para aparecer no mapa.")
-            return
+        val description = form.textField(getString(R.string.costs_description_hint), maxLength = 80)
+        val amount = form.textField(getString(R.string.costs_amount_hint)).apply {
+            // Teclado numérico, mas aceitando vírgula: é como se digita dinheiro no Brasil.
+            keyListener = android.text.method.DigitsKeyListener.getInstance("0123456789,.")
+            setRawInputType(InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL)
         }
-
-        // O servidor abre a sessão (e o prazo dela) antes de aceitar coordenadas.
-        btnShareLocation.isEnabled = false
-        RetrofitClient.instance
-            .startLocationSession(churrascoId)
-            .enqueue(object : Callback<LocationSessionResponse> {
-                override fun onResponse(
-                    call: Call<LocationSessionResponse>,
-                    response: Response<LocationSessionResponse>
-                ) {
-                    btnShareLocation.isEnabled = true
-                    val session = response.body()
-                    val sessionId = session?.sessionId
-                    if (!response.isSuccessful || session?.success != true || sessionId == null) {
-                        rootLayout.showErrorDialog(
-                            response.apiMessage("Não conseguimos iniciar o compartilhamento agora.")
-                        )
-                        return
-                    }
-                    if (isFinishing || isDestroyed) return
-                    startLocationUpdates(manager, providers, sessionId, session.expiresAt)
-                }
-
-                override fun onFailure(call: Call<LocationSessionResponse>, t: Throwable) {
-                    btnShareLocation.isEnabled = true
-                    rootLayout.showErrorDialog(
-                        "Não conseguimos iniciar o compartilhamento. Confira sua internet e tente de novo."
-                    )
-                }
-            })
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun startLocationUpdates(
-        manager: LocationManager,
-        providers: List<String>,
-        sessionId: String,
-        expiresAt: Long
-    ) {
-        locationManager = manager
-        locationSessionId = sessionId
-
-        val listener = LocationListener { location ->
-            sendLocation(location)
-        }
-        locationListener = listener
-        isSharingLocation = true
-        btnShareLocation.text = "Parar compartilhamento"
-        txtLocationStatus.text =
-            "Compartilhando sua localização até ${timeText(expiresAt)}. Mantenha o app aberto para o mapa continuar atualizando."
-
-        sessionExpiryHandler.removeCallbacks(sessionExpiry)
-        val remaining = expiresAt - System.currentTimeMillis()
-        if (remaining > 0) sessionExpiryHandler.postDelayed(sessionExpiry, remaining)
-
-        providers.forEach { provider ->
-            manager.requestLocationUpdates(provider, 30_000L, 20f, listener)
-            manager.getLastKnownLocation(provider)?.let { sendLocation(it) }
-        }
-    }
-
-    /** Para o GPS deste aparelho; [message] explica o porquê na tela. */
-    private fun endLocalSharing(message: String) {
-        locationListener?.let { listener ->
-            locationManager?.removeUpdates(listener)
-        }
-        sessionExpiryHandler.removeCallbacks(sessionExpiry)
-        locationListener = null
-        locationSessionId = null
-        isSharingLocation = false
-        btnShareLocation.text = "Estou a caminho"
-        txtLocationStatus.text = message
-    }
-
-    private fun stopLocationSharing() {
-        endLocalSharing("Compartilhamento encerrado.")
-
-        RetrofitClient.instance
-            .stopLocationSharing(churrascoId)
-            .enqueue(object : Callback<ApiResponse<Any>> {
-                override fun onResponse(
-                    call: Call<ApiResponse<Any>>,
-                    response: Response<ApiResponse<Any>>
-                ) = Unit
-
-                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
-                    rootLayout.showSnackbar("Nao conseguimos encerrar no servidor agora.")
-                }
-            })
-    }
-
-    private fun sendLocation(location: Location) {
-        val sessionId = locationSessionId ?: return
-        RetrofitClient.instance
-            .shareLocation(
-                churrascoId,
-                LocationUpdateRequest(
-                    latitude = location.latitude,
-                    longitude = location.longitude,
-                    sessionId = sessionId
-                )
-            )
-            .enqueue(object : Callback<ApiResponse<Any>> {
-                override fun onResponse(
-                    call: Call<ApiResponse<Any>>,
-                    response: Response<ApiResponse<Any>>
-                ) {
-                    if (response.isSuccessful && response.body()?.success == true) return
-                    val message = response.apiMessage("Não conseguimos atualizar sua localização.")
-                    // 410: a sessão acabou ou foi encerrada em outro aparelho; 403: a janela do evento fechou.
-                    if (response.code() == 410 || response.code() == 403) {
-                        if (locationSessionId == sessionId) endLocalSharing(message)
-                    } else {
-                        txtLocationStatus.text = message
+        val dialog = AlertDialog.Builder(this).setTitle(R.string.costs_add).setView(form)
+            .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.save, null).create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val cents = Money.parse(amount.text.toString())
+                val text = description.text.toString().trim()
+                when {
+                    text.isBlank() -> description.error = getString(R.string.costs_need_description)
+                    cents == null -> amount.error = getString(R.string.costs_need_amount)
+                    else -> {
+                        dialog.dismiss()
+                        call({ ChurrascoRepository.addExpense(churrascoId, cents, text) }) { vm.apply(it); toast(getString(R.string.costs_added)) }
                     }
                 }
-
-                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
-                    txtLocationStatus.text = "Sem conexão para atualizar sua localização."
-                }
-            })
+            }
+        }
+        dialog.show()
     }
 
-    private fun updateLocationAvailability(churrasco: Churrasco, canParticipate: Boolean) {
-        val isOpen = locationSharingWindowIsOpen(churrasco)
-        btnShareLocation.isEnabled = canParticipate && isOpen
-        if (isSharingLocation) return
-
-        txtLocationStatus.text = when {
-            !canParticipate -> "Confirme presença antes de aparecer no mapa."
-            isOpen -> "Toque em Estou a caminho para compartilhar sua localização por até 2 horas."
-            else -> "O mapa fica disponível 1 hora antes do churrasco."
+    private fun removeExpense(expenseId: String, description: String) =
+        confirm(getString(R.string.costs_remove_title), description, getString(R.string.costs_remove_action), danger = true) {
+            call({ ChurrascoRepository.removeExpense(churrascoId, expenseId) }) { vm.apply(it) }
         }
+
+    private fun showPix(transfer: Transfer, key: String) {
+        val code = PixPayload.build(key, transfer.to.displayName, transfer.amountCents, txid = "CHURRASCO")
+        val view = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(24), dp(16), dp(24), 0)
+            addView(ImageView(context).apply { setImageBitmap(qr(code, dp(240))) }, LinearLayout.LayoutParams(dp(240), dp(240)))
+            text(getString(R.string.pix_to, transfer.to.displayName, Money.format(transfer.amountCents)), TextRole.Strong, top = 16).gravity = Gravity.CENTER
+            text(getString(R.string.pix_key, key), TextRole.Caption, top = 4).gravity = Gravity.CENTER
+        }
+        AlertDialog.Builder(this).setTitle(R.string.pix_title).setView(view)
+            .setNegativeButton(R.string.close, null)
+            .setPositiveButton(R.string.pix_copy) { _, _ ->
+                getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Pix", code))
+                toast(getString(R.string.pix_copied))
+            }.show()
     }
 
-    private fun bindSharedLocations(locations: List<SharedLocation>) {
-        containerLocations.removeAllViews()
-        if (locations.isEmpty()) {
-            containerLocations.addView(TextView(this).apply {
-                text = "Ninguém compartilhou localização ainda."
-                setTextColor(getColor(R.color.mainMuted))
-                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
-                textSize = 15f
-            })
-            return
-        }
-
-        locations.forEach { location ->
-            containerLocations.addView(TextView(this).apply {
-                val name = location.displayName.ifBlank { location.username }
-                text = "$name - ${seenText(location.updatedAt)}"
-                setTextColor(getColor(R.color.mainInk))
-                background = getDrawable(R.drawable.bg_create_chip)
-                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
-                textSize = 15f
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    bottomMargin = 8.dp()
-                }
-            })
-        }
+    private fun qr(content: String, size: Int): Bitmap {
+        val matrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, size, size)
+        val pixels = IntArray(size * size) { i -> if (matrix[i % size, i / size]) Color.BLACK else Color.WHITE }
+        return Bitmap.createBitmap(pixels, size, size, Bitmap.Config.RGB_565)
     }
 
-    private fun renderLocationsOnMap(locations: List<SharedLocation>) {
-        if (!mapReady) return
+    // --- Mapa --------------------------------------------------------------------------
 
-        val payload = JSONArray()
-        locations.forEach { location ->
-            payload.put(
-                JSONObject().apply {
-                    put("name", location.displayName.ifBlank { location.username })
-                    put("lat", location.latitude)
-                    put("lng", location.longitude)
-                    put("seen", seenText(location.updatedAt))
-                }
-            )
-        }
-
-        locationMap.evaluateJavascript(
-            "window.updateChurrascoLocations(${payload});",
-            null
-        )
-    }
-
-    private fun locationSharingWindowIsOpen(churrasco: Churrasco): Boolean {
-        // Mesma referência do servidor, mesmo com o celular em outro fuso.
-        val eventTime = churrasco.eventStartsAt ?: ChurrascoDateUtils.eventDateTimeMillis(
-            churrasco.churrascoDate,
-            churrasco.hora
-        ) ?: return true
-
+    private fun windowOpen(event: Event): Boolean {
+        val start = event.eventStartsAt ?: return false
         val now = System.currentTimeMillis()
-        val opensAt = eventTime - 60 * 60 * 1000
-        val closesAt = eventTime + 4 * 60 * 60 * 1000
-
-        return now in opensAt..closesAt
+        return now >= start - HOUR && now < start + 4 * HOUR
     }
 
-    private fun timeText(millis: Long): String =
-        SimpleDateFormat("HH:mm", Locale("pt", "BR")).format(Date(millis))
+    private fun bindSharingState() {
+        if (!::shareLocationButton.isInitialized) return
+        val event = vm.event.value ?: return
+        val state = LocationShareService.state.value
+        val sharingHere = state.active && state.churrascoId == event.id
+        shareLocationButton.text = getString(if (sharingHere) R.string.map_stop else R.string.map_share)
+        shareLocationButton.isEnabled = sharingHere || windowOpen(event)
+        mapStatus.text = when {
+            sharingHere -> getString(R.string.map_sharing_until, SimpleDateFormat("HH:mm", Locale("pt", "BR")).format(Date(state.expiresAt)))
+            state.endedMessage != null && !state.active -> state.endedMessage
+            windowOpen(event) -> getString(R.string.map_window_open)
+            else -> getString(R.string.map_window_closed)
+        }
+    }
+
+    private fun bindLocations(locations: List<SharedLocation>) {
+        if (!::mapView.isInitialized) return
+        mapView.overlays.removeAll { it is Marker }
+        locations.forEach { loc ->
+            mapView.overlays.add(Marker(mapView).apply {
+                position = GeoPoint(loc.latitude, loc.longitude)
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                // Texto puro: o nome vem de outras pessoas.
+                title = loc.displayName
+                snippet = seenText(loc.updatedAt)
+            })
+        }
+        when (locations.size) {
+            0 -> Unit
+            1 -> { mapView.controller.setZoom(15.0); mapView.controller.setCenter(GeoPoint(locations[0].latitude, locations[0].longitude)) }
+            else -> mapView.post {
+                val box = BoundingBox.fromGeoPointsSafe(locations.map { GeoPoint(it.latitude, it.longitude) })
+                mapView.zoomToBoundingBox(box.increaseByScale(1.4f), false)
+            }
+        }
+        mapView.invalidate()
+        if (locations.isNotEmpty() && !LocationShareService.state.value.active) {
+            mapStatus.text = locations.joinToString("\n") { "${it.displayName} · ${seenText(it.updatedAt)}" }
+        }
+    }
 
     private fun seenText(updatedAt: Long): String {
-        val minutes = ((System.currentTimeMillis() - updatedAt) / 60_000.0).roundToInt()
+        val minutes = ((System.currentTimeMillis() - updatedAt) / 60_000).toInt()
         return when {
-            minutes <= 0 -> "visto agora"
-            minutes == 1 -> "visto há 1 min"
-            minutes < 60 -> "visto há $minutes min"
-            else -> "visto há ${minutes / 60} h"
+            minutes <= 0 -> getString(R.string.map_seen_now)
+            minutes < 60 -> getString(R.string.map_seen_minutes, minutes)
+            else -> getString(R.string.map_seen_hours, minutes / 60)
         }
     }
 
-    private fun mapHtml(): String =
-        """
-        <!doctype html>
-        <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-          <style>
-            html, body, #map { height: 100%; width: 100%; margin: 0; background: #FFF8F3; }
-            .leaflet-popup-content { font-family: sans-serif; }
-          </style>
-        </head>
-        <body>
-          <div id="map"></div>
-          <script>
-            const map = L.map('map', { zoomControl: true }).setView([-14.2350, -51.9253], 4);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-              maxZoom: 19,
-              attribution: '&copy; OpenStreetMap'
-            }).addTo(map);
-            let markers = [];
-            window.updateChurrascoLocations = function(locations) {
-              markers.forEach(marker => map.removeLayer(marker));
-              markers = [];
-              if (!locations || !locations.length) {
-                map.setView([-14.2350, -51.9253], 4);
-                return;
-              }
-              const bounds = [];
-              locations.forEach(item => {
-                // Nomes vêm de outras pessoas: texto puro, nunca HTML.
-                const popup = document.createElement('div');
-                const name = document.createElement('b');
-                name.textContent = item.name;
-                popup.appendChild(name);
-                popup.appendChild(document.createElement('br'));
-                popup.appendChild(document.createTextNode(item.seen));
-                const marker = L.marker([item.lat, item.lng])
-                  .addTo(map)
-                  .bindPopup(popup);
-                markers.push(marker);
-                bounds.push([item.lat, item.lng]);
-              });
-              if (bounds.length === 1) {
-                map.setView(bounds[0], 15);
-              } else {
-                map.fitBounds(bounds, { padding: [24, 24] });
-              }
-            };
-          </script>
-        </body>
-        </html>
-        """.trimIndent()
-
-    private fun scrollToChatInput(scrollView: ScrollView) {
-        scrollView.postDelayed({
-            scrollView.smoothScrollTo(0, scrollView.getChildAt(0).bottom)
-        }, 250)
-    }
-
-    private fun scrollToChatSection() {
-        val scrollView = findViewById<ScrollView>(R.id.detailsScrollView)
-        val chatSection = findViewById<View>(R.id.chatSection)
-        scrollView.post {
-            scrollView.smoothScrollTo(0, chatSection.top)
-        }
-    }
-
-    private fun deleteChurrasco() {
-        rootLayout.showLoading()
-        RetrofitClient.instance
-            .deleteChurrasco(churrascoId)
-            .enqueue(object : Callback<ApiResponse<Any>> {
-                override fun onResponse(
-                    call: Call<ApiResponse<Any>>,
-                    response: Response<ApiResponse<Any>>
-                ) {
-                    rootLayout.hideLoading()
-                    if (response.isSuccessful && response.body()?.success == true) {
-                        rootLayout.showSnackbar("Churrasco cancelado.")
-                        startActivity(
-                            Intent(this@ActiveChurrascoDetailsActivity, ActiveChurrascosActivity::class.java)
-                                .apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK }
-                        )
-                    } else {
-                        rootLayout.showErrorDialog(
-                            "Nao conseguimos cancelar o churrasco agora. Tente novamente."
-                        )
-                    }
-                }
-
-                override fun onFailure(call: Call<ApiResponse<Any>>, t: Throwable) {
-                    rootLayout.hideLoading()
-                    rootLayout.showErrorDialog(
-                        "Nao conseguimos cancelar o churrasco agora. Confira sua internet e tente de novo."
-                    )
-                }
-            })
-    }
-
-    private fun fetchChurrascoDetails() {
-        rootLayout.showLoading()
-        RetrofitClient.instance
-            .getChurrasco(churrascoId)
-            .enqueue(object : Callback<ApiResponse<Churrasco>> {
-                override fun onResponse(
-                    call: Call<ApiResponse<Churrasco>>,
-                    response: Response<ApiResponse<Churrasco>>
-                ) {
-                    rootLayout.hideLoading()
-                    val body = response.body()
-                    if (response.isSuccessful && body?.success == true && body.churrasco != null) {
-                        populateDetails(body.churrasco)
-                    } else {
-                        rootLayout.showErrorDialog(
-                            body?.message ?: "Nao conseguimos carregar os detalhes."
-                        )
-                    }
-                }
-
-                override fun onFailure(call: Call<ApiResponse<Churrasco>>, t: Throwable) {
-                    rootLayout.hideLoading()
-                    rootLayout.showErrorDialog(
-                        "Nao conseguimos carregar os detalhes agora. Confira sua internet e tente de novo."
-                    )
-                }
-            })
-    }
-
-    private fun populateDetails(churrasco: Churrasco) {
-        currentChurrasco = churrasco
-        val isCreator = churrasco.createdBy == userName
-        val isConfirmed = churrasco.guestsConfirmed.any { it.name == userName }
-        val canUseLocation = isCreator || isConfirmed
-
-        creatorActionsContainer.visibility = if (isCreator) View.VISIBLE else View.GONE
-        findViewById<Button>(R.id.btnChangeParticipation).visibility =
-            if (!isCreator && isConfirmed) View.VISIBLE else View.GONE
-        if (isCreator) {
-            statusCard.setBackgroundResource(R.drawable.bg_status_info)
-            txtUserRole.text = "Voce e o organizador"
-            tvStatusDescription.text = "Acompanhe quem vai, quem leva cada item e converse com o grupo."
-        } else if (isConfirmed) {
-            statusCard.setBackgroundResource(R.drawable.bg_status_success)
-            txtUserRole.text = "Você confirmou presença"
-            tvStatusDescription.text = "Confira os combinados e use o chat para alinhar detalhes."
-        } else {
-            statusCard.setBackgroundResource(R.drawable.bg_status_warning)
-            txtUserRole.text = "Aguardando resposta"
-            tvStatusDescription.text = "Responda ao convite antes de participar da conversa."
-        }
-
-        updateLocationAvailability(churrasco, canUseLocation)
-        if (canUseLocation) {
-            attachRealtimeListeners()
-        } else {
-            txtChatEmpty.text = "Confirme presença para ver e participar da conversa."
-        }
-
-        findViewById<TextView>(R.id.txtDetalhesEvento).text = buildString {
-            append("Criado por: ${churrasco.createdBy}\n")
-            append("Quando: ${ChurrascoDateUtils.eventDateTime(churrasco.churrascoDate, churrasco.hora)}\n")
-            append("Onde: ${churrasco.local}")
-        }
-
-        bindSimpleList(
-            findViewById(R.id.containerProvided),
-            buildProvidedByCreatorRows(churrasco),
-            "Nenhum item garantido pelo organizador."
-        )
-
-        bindSimpleList(
-            findViewById(R.id.containerConfirmed),
-            churrasco.guestsConfirmed.map { it.name },
-            "Ninguém confirmou ainda."
-        )
-
-        bindSimpleList(
-            findViewById(R.id.containerAssignedItems),
-            buildAssignedItemRows(churrasco),
-            "Ninguém assumiu itens ainda."
-        )
-
-        bindSimpleList(
-            findViewById(R.id.containerMissingItems),
-            buildMissingItems(churrasco),
-            "Tudo certo por enquanto."
-        )
-
-        bindSimpleList(
-            findViewById(R.id.containerDeclined),
-            churrasco.guestsDeclined,
-            "Nenhuma recusa."
-        )
-    }
-
-    private fun bindSimpleList(container: LinearLayout, items: List<String>, emptyMessage: String) {
-        container.removeAllViews()
-        if (items.isEmpty()) {
-            container.addView(TextView(this).apply {
-                text = emptyMessage
-                setTextColor(getColor(R.color.mainMuted))
-                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
-                textSize = 15f
-            })
+    private fun toggleSharing() {
+        val state = LocationShareService.state.value
+        if (state.active && state.churrascoId == churrascoId) {
+            LocationShareService.stop(this)
             return
         }
+        val needed = buildList {
+            add(Manifest.permission.ACCESS_FINE_LOCATION)
+            add(Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        val hasLocation = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (hasLocation) startSharing() else locationPermissions.launch(needed.toTypedArray())
+    }
 
-        items.forEach { item ->
-            container.addView(TextView(this).apply {
-                text = item
-                setTextColor(getColor(R.color.mainInk))
-                background = getDrawable(R.drawable.bg_create_chip)
-                setPadding(14.dp(), 10.dp(), 14.dp(), 10.dp())
-                textSize = 15f
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    bottomMargin = 8.dp()
-                }
-            })
+    private fun startSharing() {
+        val event = vm.event.value ?: return
+        call({ ChurrascoRepository.startLocationSession(churrascoId) }) { session ->
+            val sessionId = session.sessionId ?: return@call
+            LocationShareService.start(this, churrascoId, sessionId, session.expiresAt ?: return@call, event.local)
         }
     }
 
-    private fun buildAssignedItemRows(churrasco: Churrasco): List<String> {
-        return churrasco.guestsConfirmed.flatMap { guest ->
-            guest.items.map { item -> "$item - ${guest.name}" }
+    // --- Chat ----------------------------------------------------------------------------
+
+    private fun bindMessages(messages: List<ChatMessage>) {
+        if (!::messagesBox.isInitialized) return
+        messagesBox.removeAllViews()
+        if (messages.isEmpty()) {
+            messagesBox.text(getString(R.string.chat_empty), TextRole.Muted)
+            return
+        }
+        val inflater = LayoutInflater.from(this)
+        val time = SimpleDateFormat("HH:mm", Locale("pt", "BR"))
+        messages.takeLast(100).forEach { message ->
+            val view = inflater.inflate(R.layout.item_chat_message, messagesBox, false)
+            // v1 não tinha senderUid: compara pelo nome nesse caso.
+            val mine = message.senderUid?.let { it == myUid } ?: (message.sender == AuthSession.displayName(this))
+            val bubble = view.findViewById<LinearLayout>(R.id.messageBubble)
+            (bubble.layoutParams as FrameLayout.LayoutParams).gravity = if (mine) Gravity.END else Gravity.START
+            bubble.setBackgroundResource(if (mine) R.drawable.bg_chat_mine else R.drawable.bg_chat_other)
+            view.findViewById<TextView>(R.id.txtSender).apply { text = message.sender; visible(!mine) }
+            view.findViewById<TextView>(R.id.txtMessage).apply {
+                text = message.text
+                setTextColor(getColor(if (mine) R.color.md_on_primary else R.color.mainInk))
+            }
+            view.findViewById<TextView>(R.id.txtTime).apply {
+                text = time.format(Date(message.timestamp))
+                setTextColor(getColor(if (mine) R.color.md_primary_container else R.color.mainMuted))
+            }
+            view.setPadding(if (mine) dp(48) else 0, dp(4), if (mine) 0 else dp(48), dp(4))
+            messagesBox.addView(view)
         }
     }
 
-    private fun buildProvidedByCreatorRows(churrasco: Churrasco): List<String> {
-        val assignedItems = churrasco.guestsConfirmed
-            .flatMap { it.items }
-            .toSet()
-        return churrasco.fornecidosAgregados.filter { it !in assignedItems }
+    // --- Ações ---------------------------------------------------------------------------
+
+    private fun openContributions() = refreshOnReturn.launch(
+        Intent(this, ContributionsActivity::class.java).putExtra(ContributionsActivity.EXTRA_ID, churrascoId)
+    )
+
+    private fun decline(event: Event) = confirm(
+        getString(R.string.decline_title),
+        getString(if (event.isMember) R.string.decline_body_confirmed else R.string.decline_body_invited),
+        getString(R.string.decline_action),
+        danger = true,
+    ) {
+        if (LocationShareService.state.value.churrascoId == churrascoId) LocationShareService.stop(this)
+        call({ ChurrascoRepository.rsvp(churrascoId, "declined") }) { vm.apply(it); toast(getString(R.string.declined_done)) }
     }
 
-    private fun buildMissingItems(churrasco: Churrasco): List<String> {
-        val provided = churrasco.fornecidosAgregados.toSet()
-        return ItemConstants.listaCompletaDeItens.filter { it !in provided }
-    }
-
-    private fun Int.dp(): Int = (this * resources.displayMetrics.density).toInt()
-
-    override fun onDestroy() {
-        locationListener?.let { listener ->
-            locationManager?.removeUpdates(listener)
+    private fun cancelEvent() = confirm(
+        getString(R.string.cancel_event_title), getString(R.string.cancel_event_body), getString(R.string.cancel_event_action), danger = true,
+    ) {
+        call({ ChurrascoRepository.cancelEvent(churrascoId) }) {
+            ReminderScheduler.refresh(this)
+            toast(getString(R.string.cancel_event_done))
+            startActivity(Intent(this, ActiveChurrascosActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            finish()
         }
-        sessionExpiryHandler.removeCallbacks(sessionExpiry)
-        detachRealtimeListeners()
-        super.onDestroy()
     }
+
+    private fun shareInvite(event: Event) = call({ ChurrascoRepository.inviteLink(churrascoId) }) { link ->
+        InviteLinkActivity.share(this, link.url, event.local, whenText(event))
+    }
+
+    private fun openMaps(query: String) {
+        val geo = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=" + Uri.encode(query)))
+        val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(query)))
+        runCatching { startActivity(geo) }.onFailure { runCatching { startActivity(web) } }
+    }
+
+    private fun openWaze(query: String) {
+        // Sem o Waze instalado, o link abre a página do Waze, que oferece instalar.
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://waze.com/ul?navigate=yes&q=" + Uri.encode(query)))) }
+    }
+
+    private fun showMessage(message: String) =
+        AlertDialog.Builder(this).setMessage(message).setPositiveButton(R.string.ok, null).show()
 }

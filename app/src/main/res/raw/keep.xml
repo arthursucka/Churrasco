@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- O login com Google busca este texto pelo nome (getIdentifier), então o
+     shrinkResources não pode removê-lo do release. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/default_web_client_id" />

@@ -1,9 +1,8 @@
 import java.util.Properties
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
@@ -13,6 +12,15 @@ val keystoreProperties = Properties()
 val hasReleaseSigning = keystorePropertiesFile.exists()
 if (hasReleaseSigning) {
     keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
+// O CI passa -PversionName=2.0 a partir da tag; o versionCode sai dele (2.0 -> 2000).
+val appVersionName = (findProperty("versionName") as String?) ?: "2.0"
+val appVersionCode = appVersionName.split(".").let { parts ->
+    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
+    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
+    val patch = parts.getOrNull(2)?.toIntOrNull() ?: 0
+    major * 1000 + minor * 10 + patch
 }
 
 android {
@@ -25,13 +33,15 @@ android {
         minSdk = 23
         targetSdk = 35
 
-        versionCode = 20
-        versionName = "1.19"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "API_BASE_URL", "\"https://fcm-server-oe8u.onrender.com/\"")
         buildConfigField("boolean", "LOCAL_BACKEND", "false")
+        // Só o necessário: o app é em português.
+        resourceConfigurations += listOf("pt", "pt-rBR")
     }
 
     signingConfigs {
@@ -50,7 +60,8 @@ android {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             }
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -77,61 +88,49 @@ android {
     }
 
     buildFeatures {
-        compose = true
         buildConfig = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.2"
     }
 
     packaging {
-        resources.excludes.add("/META-INF/{AL2.0,LGPL2.1}")
+        resources.excludes.addAll(listOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/*.kotlin_module", "DebugProbesKt.bin"))
+    }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 }
 
 dependencies {
-    // AndroidX Core & AppCompat
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-
-    // Material Components para Views (precisa para TextInputLayout/TextInputEditText)
-    implementation(libs.material)
-    implementation (libs.material3)
-
-    // ConstraintLayout, RecyclerView, VectorDrawable, Lifecycle
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
-    implementation(libs.androidx.vectordrawable)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.material)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
 
-    // Retrofit + Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-
-    // OkHttp + Logging
     implementation(libs.okhttp)
+    // Só é ligado em debug (BuildConfig.DEBUG); o R8 remove do release.
     implementation(libs.logging.interceptor)
 
-    // Jetpack Compose
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.ui)
-    implementation(libs.ui.tooling.preview)
-    implementation(libs.material3)
-
-    // Firebase (Auth, Messaging, Crashlytics, Realtime DB)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.messaging)
-    implementation(libs.firebase.crashlytics.ktx)
-    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.crashlytics)
 
-    // Debug / Test
-    debugImplementation(libs.ui.tooling)
-    debugImplementation(libs.ui.test.manifest)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.ui.test.junit4)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.play.services.location)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.googleid)
+    implementation(libs.osmdroid)
+    implementation(libs.zxing.core)
+
     testImplementation(libs.junit)
 }

@@ -1,333 +1,224 @@
-"""Teste de ponta a ponta do Churrasco (build localTest) no emulador Android.
+"""Teste de ponta a ponta do Churrasco 2.0 (build localTest) num emulador Android.
 
 Precisa de: emuladores do Firebase (auth 9099, database 9000, projeto demo-churrasco),
-backend em CHURRASCO_LOCAL_TEST=1 na porta 3000 e um emulador Android conectado.
+MongoDB de teste (npm run mongo), backend em CHURRASCO_LOCAL_TEST=1 na porta 3000 e um
+emulador Android ligado. Ver e2e/README.md.
 """
-import json, os, re, subprocess, sys, time, urllib.request
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta, timezone
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-SDK = os.environ.get("ANDROID_HOME") or os.path.join(os.path.expanduser("~"), "AppData", "Local", "Android", "Sdk")
-ADB = os.path.join(SDK, "platform-tools", "adb")
-APK = os.path.join(HERE, "..", "app", "build", "outputs", "apk", "localTest", "app-localTest.apk")
-# Pasta do fcm-server com node_modules (o reset do Mongo usa o mongoose de lá).
-FCM_SERVER = os.environ.get("FCM_SERVER_DIR", os.path.join(HERE, "..", "..", "fcm-server"))
-PKG = "com.longynus.churrasco"
-PROJECT = "demo-churrasco"
-AUTH = "http://127.0.0.1:9099"
-DB = "http://127.0.0.1:9000"
-API = "http://127.0.0.1:3000"
-SHOTS = os.path.join(HERE, "shots")
-PASSWORD = "teste-local-123"  # só existe no emulador do Firebase
-results = []
+import time
+from support import (API, PKG, adb, api_user, befriend, check, db_get, dismiss_dialog, edit_texts, event, find, fill,
+                     finish, http, install_fresh, launch, reset_state, sao_paulo, scroll_to,
+                     screen_text, shot, sign_in, tap, tap_text, type_into, verify_email, wait_for)
 
 
-def adb(*args, check=True):
-    return subprocess.run([ADB, *args], capture_output=True, text=True, encoding="utf-8", check=check).stdout
+def field(hint, timeout=60):
+    """Campo de texto pelo hint (os campos montados em código não têm id)."""
+    # Primeiro sem rolar: em diálogos, um gesto fora deles os fecharia.
+    node = wait_for(hint=hint, timeout=5)
+    return node if node is not None else scroll_to(hint=hint, timeout=timeout)
 
-
-def http(method, url, body=None, token=None):
-    data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("Content-Type", "application/json")
-    if token:
-        req.add_header("Authorization", f"Bearer {token}")
-    try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            return r.status, json.loads(r.read() or b"null")
-    except urllib.error.HTTPError as e:
-        return e.code, json.loads(e.read() or b"null")
-
-
-def check(name, ok, detail=""):
-    results.append((name, bool(ok), detail))
-    print(("PASS " if ok else "FAIL ") + name + (f" -- {detail}" if detail else ""), flush=True)
-
-
-def shot(name):
-    os.makedirs(SHOTS, exist_ok=True)
-    with open(os.path.join(SHOTS, f"{name}.png"), "wb") as f:
-        f.write(subprocess.run([ADB, "exec-out", "screencap", "-p"], capture_output=True).stdout)
-
-
-def dump():
-    for _ in range(3):
-        adb("shell", "uiautomator", "dump", "/sdcard/ui.xml", check=False)
-        xml = adb("shell", "cat", "/sdcard/ui.xml", check=False)
-        if xml.strip().startswith("<?xml"):
-            return ET.fromstring(xml[xml.index("<hierarchy"):])
-        time.sleep(1)
-    raise RuntimeError("uiautomator dump falhou")
-
-
-def nodes(root):
-    return list(root.iter("node"))
-
-
-def find(rid=None, text=None, contains=None, root=None):
-    root = root if root is not None else dump()
-    for n in nodes(root):
-        if rid and not n.get("resource-id", "").endswith(":id/" + rid):
-            continue
-        if text is not None and n.get("text") != text:
-            continue
-        if contains is not None and contains not in (n.get("text") or ""):
-            continue
-        if n.get("visible-to-user", "true") == "false":
-            continue
-        return n
-    return None
-
-
-def wait_for(timeout=40, **kw):
-    end = time.time() + timeout
-    while time.time() < end:
-        n = find(**kw)
-        if n is not None:
-            return n
-        time.sleep(1)
-    return None
-
-
-def center(n):
-    a, b, c, d = map(int, re.findall(r"\d+", n.get("bounds")))
-    return (a + c) // 2, (b + d) // 2
-
-
-def tap(n):
-    x, y = center(n)
-    adb("shell", "input", "tap", str(x), str(y))
-    time.sleep(1)
-
-
-def scroll_to(timeout=20, **kw):
-    """Rola até o elemento ficar inteiro na tela (fora da barra do topo e da de baixo)."""
-    end = time.time() + timeout
-    while time.time() < end:
-        n = find(**kw)
-        if n is not None:
-            top, bottom = map(int, re.findall(r"\d+", n.get("bounds"))[1::2])
-            if top >= 300 and bottom <= 2210:
-                return n
-            if top < 300:
-                adb("shell", "input", "swipe", "540", "900", "540", "1500", "300")
-            else:
-                adb("shell", "input", "swipe", "540", "1800", "540", "1200", "300")
-        else:
-            adb("shell", "input", "swipe", "540", "1800", "540", "900", "300")
-        time.sleep(1)
-    return None
-
-
-def type_into(rid, value):
-    field = wait_for(rid=rid)
-    tap(field)
-    adb("shell", "input", "keyevent", "KEYCODE_MOVE_END")
-    for _ in range(40):
-        adb("shell", "input", "keyevent", "KEYCODE_DEL")
-    adb("shell", "input", "text", value.replace(" ", "%s"))
-    hide_keyboard()
-
-
-def hide_keyboard():
-    # O teclado virtual fica desligado (ver main), então não há o que fechar;
-    # apertar BACK aqui fecharia a tela.
-    time.sleep(0.5)
-
-
-def dismiss_dialog():
-    ok = find(text="OK")
-    if ok is not None:
-        tap(ok)
-
-
-def screen_text():
-    return " | ".join(n.get("text") for n in nodes(dump()) if n.get("text"))
-
-
-# --- Helpers dos emuladores do Firebase ---------------------------------
-
-def verify_email(email):
-    _, body = http("GET", f"{AUTH}/emulator/v1/projects/{PROJECT}/oobCodes")
-    links = [c["oobLink"] for c in body["oobCodes"] if c["email"] == email and c["requestType"] == "VERIFY_EMAIL"]
-    if not links:
-        return False
-    urllib.request.urlopen(links[-1], timeout=15).read()
-    return True
-
-
-def api_user(email, name):
-    """Cria, confirma e registra um usuário só pela API (convidados do teste)."""
-    _, r = http("POST", f"{AUTH}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo",
-                {"email": email, "password": PASSWORD, "returnSecureToken": True})
-    http("POST", f"{AUTH}/identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=demo",
-         {"requestType": "VERIFY_EMAIL", "idToken": r["idToken"]})
+def sign_up_in_app(email, name):
+    type_into("edtEmail", email)
+    type_into("edtPassword", "teste-local-123")
+    tap(scroll_to(rid="btnCreateAccount"))
+    wait_for(rid="btnCheckVerified")
     verify_email(email)
-    token = sign_in(email)
-    status, _ = http("POST", f"{API}/users/register", {"username": name, "displayName": name}, token)
-    return token, status
+    tap(scroll_to(rid="btnCheckVerified"))
+    wait_for(rid="btnSaveProfile")
+    type_into("edtUserName", name)
+    tap(scroll_to(rid="btnSaveProfile"))
+    return wait_for(contains=f"Oi, {name}", timeout=60) is not None
 
 
-def sign_in(email):
-    _, r = http("POST", f"{AUTH}/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo",
-                {"email": email, "password": PASSWORD, "returnSecureToken": True})
-    return r["idToken"]
+def sign_in_in_app(email, password="teste-local-123"):
+    type_into("edtEmail", email)
+    type_into("edtPassword", password)
+    tap(scroll_to(rid="btnSignIn"))
 
 
-def sao_paulo_now_plus(minutes):
-    sp = datetime.now(timezone.utc) + timedelta(hours=-3, minutes=minutes)
-    return sp.strftime("%d/%m/%Y"), sp.strftime("%H:%M")
+def sign_out_in_app():
+    adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
+    wait_for(rid="btnSwitchUser", timeout=30)
+    tap(scroll_to(rid="btnSwitchUser"))
+    tap(wait_for(text="Sair"))
+    wait_for(rid="btnSignIn", timeout=30)
 
 
-def db_get(path):
-    req = urllib.request.Request(f"{DB}/{path}.json?ns={PROJECT}")
-    req.add_header("Authorization", "Bearer owner")
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read())
+def open_active_event(place):
+    adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
+    tap(wait_for(rid="btnActiveChurrascos", timeout=40))
+    tap(wait_for(contains=place, timeout=40))
+    return wait_for(contains="Churrasco de", timeout=40) is not None
 
-
-def reset_state():
-    """Começa do zero: contas do Auth, Realtime Database e Mongo de teste."""
-    http("DELETE", f"{AUTH}/emulator/v1/projects/{PROJECT}/accounts")
-    req = urllib.request.Request(f"{DB}/.json?ns={PROJECT}", data=b"null", method="PUT")
-    req.add_header("Authorization", "Bearer owner")
-    urllib.request.urlopen(req, timeout=15).read()
-    subprocess.run(["node", "-e",
-                    "require('mongoose').connect('mongodb://127.0.0.1:27027/churrasco_test_e2e?replicaSet=testset')"
-                    ".then(m=>m.connection.dropDatabase()).then(()=>process.exit(0))"],
-                   cwd=FCM_SERVER, check=True)
-
-
-# --- Roteiro ------------------------------------------------------------
 
 def main():
-    org_email = "organizador@churrasco.test"
+    org_email, g1_email, g2_email, g3_email = (f"{n}@churrasco.test" for n in ("organizador", "gui", "gabi", "novo"))
     reset_state()
+    install_fresh()
+    launch()
 
-    # Teclado virtual desligado: os botões não ficam escondidos atrás dele.
-    adb("shell", "settings", "put", "secure", "show_ime_with_hard_keyboard", "0")
-    adb("uninstall", PKG, check=False)
-    adb("install", "-r", "-g", APK)
-    adb("shell", "monkey", "-p", PKG, "-c", "android.intent.category.LAUNCHER", "1")
-
-    # 1. Criar conta
+    # 1. Conta nova pelo app, com confirmação de e-mail
     check("tela de login aparece", wait_for(rid="btnCreateAccount") is not None)
-    shot("01-login")
-    type_into("edtEmail", org_email)
-    type_into("edtPassword", PASSWORD)
-    tap(find(rid="btnCreateAccount"))
-    check("pede confirmação do e-mail", wait_for(rid="btnCheckVerified") is not None)
-    check("mostra o e-mail na mensagem", find(contains=org_email) is not None)
-    shot("02-confirmar-email")
+    check("botão do Google aparece", find(rid="btnGoogle") is not None)
+    check("cadastro com e-mail confirmado chega na tela principal", sign_up_in_app(org_email, "Organizador"))
+    shot("01-principal")
+    org_token, org_uid = sign_in(org_email)
 
-    # 2. "Já confirmei" sem confirmar continua na mesma etapa
-    tap(find(rid="btnCheckVerified"))
-    time.sleep(3)
-    check("sem confirmar, continua pedindo confirmação", wait_for(rid="btnCheckVerified", timeout=10) is not None)
-
-    # 3. Confirmar pelo link e seguir
-    check("e-mail de confirmação foi enviado", verify_email(org_email))
-    tap(find(rid="btnCheckVerified"))
-    check("pede o nome no grupo", wait_for(rid="btnSaveProfile") is not None)
-    shot("03-nome")
-    type_into("edtUserName", "Organizador")
-    tap(find(rid="btnSaveProfile"))
-    check("entra na tela principal", wait_for(contains="Oi, Organizador") is not None, screen_text()[:200])
-    shot("04-principal")
-
-    # 4. Convidado e churrasco criados pela API, começando em 30 min (São Paulo)
-    guest_token, status = api_user("convidado@churrasco.test", "Convidado")
-    check("convidado registrado pela API", status == 201, f"status {status}")
-    org_token = sign_in(org_email)
-    date, hour = sao_paulo_now_plus(30)
+    # 2. Amigos e churrasco preparados pela API
+    g1_token, g1_uid = api_user(g1_email, "Gui")
+    g2_token, g2_uid = api_user(g2_email, "Gabi")
+    g3_token, g3_uid = api_user(g3_email, "Novo")
+    befriend(org_token, org_email, g1_token, g1_email)
+    befriend(org_token, org_email, g2_token, g2_email)
+    http("PATCH", f"{API}/users/me", {"pixKey": "gui@pix.com"}, g1_token)
+    date, hour = sao_paulo(30)
     status, body = http("POST", f"{API}/churrascos", {
-        "churrascoDate": date, "hora": hour, "local": "Casa do teste",
-        "fornecidos": ["Carvão"], "invitedUsers": ["Convidado"], "userName": "Organizador"}, org_token)
-    check("churrasco criado", status == 201, f"{status} {body}")
-    churrasco_id = body.get("id")
-    status, _ = http("POST", f"{API}/churrascos/{churrasco_id}/confirm-presenca",
-                     {"name": "Convidado", "selectedItems": ["Gelo"]}, guest_token)
-    check("convidado confirmou presença", status == 200, f"status {status}")
-    http("POST", f"{API}/churrascos/{churrasco_id}/messages", {"text": "Levo o gelo!"}, guest_token)
+        "churrascoDate": date, "hora": hour, "local": "Casa do teste", "address": "Av. Paulista, 1000, São Paulo",
+        "invitedUids": [g1_uid, g2_uid]}, org_token)
+    check("churrasco criado pela API", status == 201, str(body))
+    eid = body["id"]
+    picanha = {"category": "Carne bovina", "details": {"corte": "Picanha", "quantidade": "1,5 kg"}}
+    http("POST", f"{API}/churrascos/{eid}/rsvp", {"status": "confirmed", "contributions": [picanha]}, g1_token)
+    http("POST", f"{API}/churrascos/{eid}/rsvp", {"status": "confirmed", "contributions": [
+        {"category": "Carne bovina", "details": {"corte": "Fraldinha", "quantidade": "2 kg"}},
+        {"category": "outro", "note": "Farofa da vó"}]}, g2_token)
+    http("POST", f"{API}/churrascos/{eid}/messages", {"text": "Levo o gelo!"}, g1_token)
+    http("POST", f"{API}/churrascos/{eid}/expenses", {"amountCents": 30000, "description": "Carnes"}, g1_token)
+    http("POST", f"{API}/churrascos/{eid}/expenses", {"amountCents": 6000, "description": "Bebidas"}, g2_token)
 
-    # 5. Abrir o churrasco no app
-    # As telas não são exportadas: navega como a pessoa faria.
-    tap(wait_for(rid="btnActiveChurrascos"))
-    check("lista de ativos mostra o churrasco", wait_for(contains="Casa do teste", timeout=40) is not None)
-    shot("05a-ativos")
-    tap(wait_for(contains="Casa do teste"))
-    check("detalhes mostram o organizador", wait_for(contains="organizador", timeout=40) is not None)
-    shot("05-detalhes")
-    check("chat lê a mensagem do convidado (regras do banco com login)",
-          scroll_to(contains="Levo o gelo!") is not None)
+    # 3. Tela do churrasco
+    check("abre o churrasco pela lista de ativos", open_active_event("Casa do teste"))
+    check("botões de Maps e Waze", find(contains="Maps") is not None and find(contains="Waze") is not None)
+    shot("02-detalhes")
+    check("duas pessoas levam carne bovina", scroll_to(contains="Picanha") is not None and scroll_to(contains="Fraldinha") is not None)
+    check("item \"Outro\" aparece com o texto livre", scroll_to(contains="Farofa da vó") is not None)
+    shot("03-itens")
 
-    # 6. Mandar mensagem pelo app
-    type_into("edtMessage", "Fechado, ate mais tarde")
-    tap(scroll_to(rid="btnSend"))
+    # 4. Contas e Pix: total 360, 120 para cada; o organizador deve 120 ao Gui
+    check("mostra quanto o organizador deve", scroll_to(contains="Você manda R$ 120,00 para Gui") is not None, screen_text()[:300])
+    tap_text("Pagar com Pix")
+    check("Pix mostra a chave de quem recebe", wait_for(contains="Chave: gui@pix.com", timeout=15) is not None)
+    shot("04-pix")
+    tap(wait_for(text="Copiar código"))
+    time.sleep(3)  # diálogo fechando e aviso de "copiado"
+
+    # 5. Itens do organizador pela tela de itens
+    tap_text("O que eu já garanto")
+    check("tela de itens abre", wait_for(contains="O que você vai levar?", timeout=30) is not None)
+    tap(scroll_to(contains="Carvão"))
+    tap(scroll_to(text="5 kg"))
+    shot("05-escolher-itens")
+    tap(wait_for(text="Salvar meus itens"))
     time.sleep(3)
-    msgs = db_get(f"churrascos/{churrasco_id}/messages")
-    texts = [m["text"] for m in (msgs or {}).values()]
-    check("mensagem do app chegou no banco", "Fechado, ate mais tarde" in texts, str(texts))
-    check("mensagem do app aparece no chat", scroll_to(contains="Fechado, ate mais tarde") is not None)
-    shot("06-chat")
+    mine = [c for c in event(eid, org_token)["contributions"] if c["uid"] == org_uid]
+    check("itens do organizador salvos com quantidade", any(c["category"] == "Carvão" and c["details"].get("quantidade") == "5 kg" for c in mine), str(mine))
 
-    # 7. Compartilhar localização
+    # 6. Despesa pelo app
+    tap_text("Lançar despesa")
+    check("diálogo de despesa abre", wait_for(text="Salvar", timeout=20) is not None, screen_text()[:200])
+    description, amount = edit_texts()[:2]  # o diálogo tem só esses dois campos, nessa ordem
+    fill(description, "Carvao")
+    fill(edit_texts()[1], "45,00")
+    tap(wait_for(text="Salvar"))
+    time.sleep(3)
+    expenses = event(eid, org_token)["expenses"]
+    check("despesa lançada pelo app", any(x["uid"] == org_uid and x["amountCents"] == 4500 for x in expenses), str(expenses))
+
+    # 7. Chat (regras do banco exigem login e participação)
+    check("chat mostra a mensagem do convidado", scroll_to(contains="Levo o gelo!") is not None)
+    fill(field("Digite uma mensagem"), "Fechado, ate mais tarde")
+    tap(scroll_to(text="Enviar"))
+    time.sleep(3)
+    messages = list((db_get(f"churrascos/{eid}/messages") or {}).values())
+    check("mensagem do app chega com o UID", any(m.get("senderUid") == org_uid and m["text"] == "Fechado, ate mais tarde" for m in messages), str(messages))
+
+    # 8. Localização continua com a tela bloqueada
     adb("emu", "geo", "fix", "-46.6333", "-23.5505", check=False)
-    share = scroll_to(rid="btnShareLocation")
-    tap(share)
+    tap(scroll_to(text="📍 Estou a caminho"))
     time.sleep(8)
-    adb("emu", "geo", "fix", "-46.6340", "-23.5510", check=False)
-    time.sleep(5)
-    locs = db_get(f"churrascos/{churrasco_id}/locations")
-    loc = next(iter((locs or {}).values()), {})
-    check("localização enviada com sessão", "latitude" in loc and loc.get("sessionId"), str(loc)[:200])
-    check("botão vira 'Parar compartilhamento'", find(text="Parar compartilhamento") is not None)
-    shot("07-localizacao")
-    tap(find(text="Parar compartilhamento"))
+    first = (db_get(f"churrascos/{eid}/locations") or {}).get(org_uid, {})
+    check("localização enviada pelo serviço", "latitude" in first, str(first))
+    check("aviso de compartilhamento em andamento", scroll_to(contains="mesmo com a tela bloqueada", timeout=10) is not None)
+    shot("06-mapa")
+    adb("shell", "input", "keyevent", "KEYCODE_SLEEP")
+    time.sleep(2)
+    adb("emu", "geo", "fix", "-46.6500", "-23.5600", check=False)
+    moved = {}
+    for _ in range(12):
+        time.sleep(5)
+        moved = (db_get(f"churrascos/{eid}/locations") or {}).get(org_uid, {})
+        if abs(moved.get("latitude", 0) - (-23.56)) < 0.001:
+            break
+    check("localização atualiza com a tela bloqueada", abs(moved.get("latitude", 0) - (-23.56)) < 0.001, str(moved))
+    adb("shell", "input", "keyevent", "KEYCODE_WAKEUP")
+    adb("shell", "wm", "dismiss-keyguard", check=False)
+    time.sleep(2)
+    tap(scroll_to(text="Parar de compartilhar"))
     time.sleep(3)
-    locs = db_get(f"churrascos/{churrasco_id}/locations")
-    check("parar remove a localização do servidor", not locs, str(locs)[:200])
+    check("parar remove a localização do servidor", not (db_get(f"churrascos/{eid}/locations") or {}).get(org_uid))
 
-    # 8. Sair da conta
-    tap(wait_for(rid="action_home"))
-    tap(scroll_to(rid="btnSwitchUser"))
-    tap(wait_for(text="Sair"))
-    check("sair volta para o login", wait_for(rid="btnSignIn") is not None)
+    # 9. Edição pelo organizador
+    tap_text("Editar data, local ou convidados")
+    wait_for(contains="Editar churrasco", timeout=30)
+    time.sleep(2)  # o formulário carrega os dados do churrasco
+    local = field("Local", timeout=5)
+    # Já vem preenchido: em alguns Androids o hint não aparece; o local é o 1º campo do formulário.
+    fill(local if local is not None else edit_texts()[0], "Sitio do teste")
+    shot("07a-editar")
+    tap(wait_for(text="Salvar"))
+    time.sleep(3)
+    check("edição salva o novo local", event(eid, org_token)["local"] == "Sitio do teste", screen_text()[:300])
 
-    # 9. Entrar de novo com a mesma conta
-    type_into("edtEmail", org_email)
-    type_into("edtPassword", PASSWORD)
-    tap(find(rid="btnSignIn"))
-    check("login com e-mail e senha volta ao perfil", wait_for(contains="Oi, Organizador") is not None)
+    # 10. Link de convite
+    tap_text("📤 Convidar com link")
+    time.sleep(3)
+    focus = adb("shell", "dumpsys", "window", "displays")
+    check("abre a lista de apps para compartilhar", "intentresolver" in focus or "ChooserActivity" in focus or "ResolverActivity" in focus)
+    shot("07-compartilhar")
+    adb("shell", "input", "keyevent", "KEYCODE_BACK")
+    link = http("POST", f"{API}/churrascos/{eid}/invite-link", {}, org_token)[1]["payload"]
 
-    # 10. Senha errada
-    tap(scroll_to(rid="btnSwitchUser"))
-    tap(wait_for(text="Sair"))
-    wait_for(rid="btnSignIn")
-    type_into("edtEmail", org_email)
-    type_into("edtPassword", "senha-errada")
-    tap(find(rid="btnSignIn"))
+    # 11. Lembretes: um churrasco amanhã ganha avisos de 24 h e 2 h
+    date2, hour2 = sao_paulo(60 * 30)
+    http("POST", f"{API}/churrascos", {"churrascoDate": date2, "hora": hour2, "local": "Amanha", "address": ""}, org_token)
+    adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
+    tap(wait_for(rid="btnActiveChurrascos", timeout=40))
+    wait_for(contains="Amanha", timeout=30)
+    time.sleep(2)
+    alarms = adb("shell", "dumpsys", "alarm")
+    check("lembretes agendados", alarms.count("com.longynus.churrasco.REMINDER") >= 2 or alarms.count(PKG) >= 2)
+
+    # 12. Outra pessoa entra pelo link e escolhe "Outro"
+    sign_out_in_app()
+    sign_in_in_app(g3_email)
+    check("Novo entra com e-mail e senha", wait_for(contains="Oi, Novo", timeout=60) is not None)
+    adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-p", PKG, "-d", link["url"])
+    check("link abre o convite no app", wait_for(contains="Você foi convidado!", timeout=40) is not None, screen_text()[:300])
+    shot("08-convite")
+    tap_text("Vou! Escolher o que levar")
+    tap(scroll_to(contains="Outro"))
+    fill(field("O que você vai levar?"), "Gelo de coco")
+    tap(wait_for(text="Confirmar presença"))
+    check("presença confirmada", wait_for(contains="Você vai!", timeout=40) is not None)
+    novo = event(eid, g3_token)
+    check("contribuição \"Outro\" salva", any(c["uid"] == g3_uid and c["category"] == "outro" and c["note"] == "Gelo de coco" for c in novo["contributions"]))
+
+    # 13. Pedido de amizade pela tela de amigos
+    adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
+    tap(scroll_to(contains="Amigos"))
+    fill(field("E-mail"), org_email)
+    tap(wait_for(text="Mandar pedido"))
+    time.sleep(3)
+    incoming = http("GET", f"{API}/friends", token=org_token)[1]["payload"]["incoming"]
+    check("pedido de amizade chega ao organizador", any(f["uid"] == g3_uid for f in incoming), str(incoming))
+    shot("09-amigos")
+
+    # 14. Senha errada
+    sign_out_in_app()
+    sign_in_in_app(org_email, "senha-errada")
     check("senha errada mostra mensagem clara", wait_for(contains="incorretos", timeout=20) is not None)
-    shot("08-senha-errada")
     dismiss_dialog()
 
-    # 11. Nome já usado por outra conta
-    type_into("edtEmail", "outra@churrasco.test")
-    type_into("edtPassword", PASSWORD)
-    tap(find(rid="btnCreateAccount"))
-    wait_for(rid="btnCheckVerified")
-    verify_email("outra@churrasco.test")
-    tap(find(rid="btnCheckVerified"))
-    wait_for(rid="btnSaveProfile")
-    type_into("edtUserName", "Convidado")
-    tap(find(rid="btnSaveProfile"))
-    check("nome já reservado é recusado", wait_for(contains="reservado", timeout=20) is not None, screen_text()[:200])
-    shot("09-nome-reservado")
-
-    failed = [r for r in results if not r[1]]
-    print(f"\n{len(results) - len(failed)}/{len(results)} passaram")
-    sys.exit(1 if failed else 0)
+    finish()
 
 
 if __name__ == "__main__":
