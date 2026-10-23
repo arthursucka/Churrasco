@@ -109,7 +109,9 @@ def bounds(n):
 def find(rid=None, text=None, contains=None, desc=None, hint=None, root=None):
     root = root if root is not None else dump()
     for n in nodes(root):
-        if hint is not None and not (n.get("class", "").endswith("EditText") and hint in (n.get("hint") or "")):
+        # Alguns Androids expõem o hint em "hint"; outros mostram o hint como o texto do campo vazio.
+        if hint is not None and not (n.get("class", "").endswith("EditText")
+                                     and (hint in (n.get("hint") or "") or hint in (n.get("text") or ""))):
             continue
         if rid and not n.get("resource-id", "").endswith(":id/" + rid):
             continue
