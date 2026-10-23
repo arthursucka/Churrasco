@@ -130,6 +130,13 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
             if (isSharingLocation) stopLocationSharing() else requestLocationSharing()
         }
 
+        findViewById<Button>(R.id.btnChangeParticipation).setOnClickListener {
+            startActivity(
+                Intent(this, ChurrascoDetailsActivity::class.java)
+                    .putExtra("churrascoId", churrascoId)
+            )
+        }
+
         setupLocationMap()
         setupChat()
         fetchChurrascoDetails()
@@ -662,6 +669,8 @@ class ActiveChurrascoDetailsActivity : AppCompatActivity() {
         val canUseLocation = isCreator || isConfirmed
 
         creatorActionsContainer.visibility = if (isCreator) View.VISIBLE else View.GONE
+        findViewById<Button>(R.id.btnChangeParticipation).visibility =
+            if (!isCreator && isConfirmed) View.VISIBLE else View.GONE
         if (isCreator) {
             statusCard.setBackgroundResource(R.drawable.bg_status_info)
             txtUserRole.text = "Voce e o organizador"

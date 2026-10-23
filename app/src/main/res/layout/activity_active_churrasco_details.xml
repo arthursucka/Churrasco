@@ -238,6 +238,15 @@
                     app:cornerRadius="16dp" />
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnChangeParticipation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Alterar minha participação"
+                android:textAllCaps="false"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:id="@+id/locationSection"
                 android:layout_width="match_parent"
@@ -278,12 +287,17 @@
                     app:backgroundTint="@color/mainPrimary"
                     app:cornerRadius="16dp" />
 
-                <WebView
-                    android:id="@+id/locationMap"
+                <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="240dp"
-                    android:layout_marginTop="14dp"
-                    android:background="@color/mainBackground" />
+                    android:layout_marginTop="14dp">
+
+                    <WebView
+                        android:id="@+id/locationMap"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/mainBackground" />
+                </FrameLayout>
 
                 <LinearLayout
                     android:id="@+id/containerLocations"

@@ -84,6 +84,7 @@ class EscolherItensActivity : AppCompatActivity() {
         uniqueItems.forEach { label ->
             CheckBox(this).apply {
                 text = label
+                isChecked = label in intent.getStringArrayListExtra("meusItens").orEmpty()
                 textSize = 16f
                 setTextColor(getColor(R.color.mainInk))
                 background = getDrawable(R.drawable.bg_create_chip)
@@ -126,7 +127,7 @@ class EscolherItensActivity : AppCompatActivity() {
                         return
                     }
 
-                    val unavailableItems = churrasco.fornecidosAgregados.toSet()
+                    val unavailableItems = churrasco.itemsReservedByOthers(userName)
                     val stillAvailableSelectedItems = selectedItems
                         .filterNot { it in unavailableItems }
                         .distinct()
@@ -140,7 +141,11 @@ class EscolherItensActivity : AppCompatActivity() {
                     }
 
                     if (stillAvailableSelectedItems.size < selectedItems.size) {
-                        rootLayout.showSnackbar("Alguns itens ja foram assumidos e foram removidos da sua selecao.")
+                        rootLayout.hideLoading()
+                        btnConfirmar.isEnabled = true
+                        refreshAvailableItems(unavailableItems)
+                        rootLayout.showErrorDialog("Um dos itens foi assumido por outra pessoa. Revise sua seleção antes de confirmar.")
+                        return
                     }
 
                     enviarPresenca(stillAvailableSelectedItems)
@@ -205,8 +210,8 @@ class EscolherItensActivity : AppCompatActivity() {
                     } else {
                         AlertDialog.Builder(this@EscolherItensActivity)
                             .setTitle("Ops")
-                            .setMessage(response.body()?.message ?: "Nao conseguimos confirmar sua presenca agora. Tente novamente.")
-                            .setPositiveButton("OK") { _, _ -> finish() }
+                            .setMessage(if (response.code() == 409) "Os itens mudaram enquanto você escolhia. Revise e tente novamente." else "Não conseguimos confirmar sua presença agora. Tente novamente.")
+                            .setPositiveButton("OK", null)
                             .setCancelable(false)
                             .show()
                     }

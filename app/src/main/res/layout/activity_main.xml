@@ -281,6 +281,15 @@
                 android:textColor="@color/mainMuted"
                 android:textSize="15sp" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReviewLegacyMain"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/legacy_review_accounts"
+                android:textAllCaps="false"
+                android:visibility="gone" />
+
         </LinearLayout>
     </ScrollView>
 

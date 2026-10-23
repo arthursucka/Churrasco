@@ -15,5 +15,18 @@ data class LegacyLinkRequestInfo(
 
 data class LegacyLinkStatus(
     val request: LegacyLinkRequestInfo? = null,
+    val canReview: Boolean = false,
     val requestsOpen: Boolean = false
+)
+
+/** Corpo de `POST /legacy-link/{id}/approve`, usado só pelo administrador. */
+data class LegacyLinkApproval(
+    val confirmedOwner: Boolean,
+    val evidenceReference: String,
+    val expectedUsername: String,
+    val expectedEmail: String
+)
+
+data class LegacyLinkRejection(
+    val reason: String
 )

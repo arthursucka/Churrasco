@@ -95,4 +95,20 @@ interface ApiService {
     fun requestLegacyLink(
         @Body request: LegacyLinkRequest
     ): Call<ApiResponse<LegacyLinkRequestInfo>>
+
+    // Só o UID configurado em CHURRASCO_MIGRATION_REVIEWER_UID tem acesso.
+    @GET("/legacy-link/review")
+    fun legacyLinkReviews(): Call<ApiResponse<List<LegacyLinkRequestInfo>>>
+
+    @POST("/legacy-link/{id}/approve")
+    fun approveLegacyLink(
+        @Path("id") id: String,
+        @Body approval: LegacyLinkApproval
+    ): Call<ApiResponse<LegacyLinkRequestInfo>>
+
+    @POST("/legacy-link/{id}/reject")
+    fun rejectLegacyLink(
+        @Path("id") id: String,
+        @Body rejection: LegacyLinkRejection
+    ): Call<ApiResponse<LegacyLinkRequestInfo>>
 }

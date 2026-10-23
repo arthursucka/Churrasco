@@ -34,6 +34,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".LegacyLinkReviewActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Tela principal (após login) -->
         <activity
             android:name=".MainActivity"

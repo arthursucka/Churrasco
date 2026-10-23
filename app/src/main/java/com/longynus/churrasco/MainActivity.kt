@@ -11,6 +11,10 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.longynus.churrasco.model.LegacyLinkStatus
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
 
@@ -68,8 +72,30 @@ class MainActivity : AppCompatActivity() {
             confirmSwitchUser()
         }
 
+        setupLegacyReviewButton()
         requestNotificationPermissionIfNeeded()
         FcmTokenManager.syncCurrentToken(this)
+    }
+
+    /** O botão só aparece para o administrador que revisa contas antigas. */
+    private fun setupLegacyReviewButton() {
+        val reviewButton = findViewById<Button>(R.id.btnReviewLegacyMain)
+        reviewButton.setOnClickListener {
+            startActivity(Intent(this, LegacyLinkReviewActivity::class.java))
+        }
+        RetrofitClient.instance.legacyLinkStatus()
+            .enqueue(object : Callback<ApiResponse<LegacyLinkStatus>> {
+                override fun onResponse(
+                    call: Call<ApiResponse<LegacyLinkStatus>>,
+                    response: Response<ApiResponse<LegacyLinkStatus>>
+                ) {
+                    if (isFinishing || isDestroyed) return
+                    val canReview = response.body()?.payload?.canReview == true
+                    reviewButton.visibility = if (canReview) View.VISIBLE else View.GONE
+                }
+
+                override fun onFailure(call: Call<ApiResponse<LegacyLinkStatus>>, t: Throwable) = Unit
+            })
     }
 
     private fun confirmSwitchUser() {
