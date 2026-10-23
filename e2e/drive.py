@@ -5,7 +5,7 @@ MongoDB de teste (npm run mongo), backend em CHURRASCO_LOCAL_TEST=1 na porta 300
 emulador Android ligado. Ver e2e/README.md.
 """
 import time
-from support import (API, PKG, adb, api_user, befriend, check, db_get, dismiss_dialog, event, find, fill,
+from support import (API, PKG, adb, api_user, befriend, check, db_get, dismiss_dialog, edit_texts, event, find, fill,
                      finish, http, install_fresh, launch, reset_state, sao_paulo, scroll_to,
                      screen_text, shot, sign_in, tap, tap_text, type_into, verify_email, wait_for)
 
@@ -114,8 +114,10 @@ def main():
 
     # 6. Despesa pelo app
     tap_text("Lançar despesa")
-    fill(field("O que foi"), "Carvao")
-    fill(field("Valor"), "45,00")
+    check("diálogo de despesa abre", wait_for(text="Salvar", timeout=20) is not None, screen_text()[:200])
+    description, amount = edit_texts()[:2]  # o diálogo tem só esses dois campos, nessa ordem
+    fill(description, "Carvao")
+    fill(edit_texts()[1], "45,00")
     tap(wait_for(text="Salvar"))
     time.sleep(3)
     expenses = event(eid, org_token)["expenses"]

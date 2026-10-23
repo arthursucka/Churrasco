@@ -136,12 +136,18 @@ def wait_for(timeout=40, **kw):
     return None
 
 
+def edit_texts(root=None):
+    root = root if root is not None else dump()
+    return [n for n in nodes(root) if n.get("class", "").endswith("EditText")]
+
+
 def screen_text():
     return " | ".join(n.get("text") for n in nodes(dump()) if n.get("text"))
 
 
 def tap(n):
     if n is None:
+        shot("falha")
         raise AssertionError("elemento não encontrado na tela: " + screen_text()[:400])
     a, b, c, d = bounds(n)
     adb("shell", "input", "tap", str((a + c) // 2), str((b + d) // 2))
