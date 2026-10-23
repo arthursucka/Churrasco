@@ -38,6 +38,7 @@ converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics-ktx = { module = "com.google.firebase:firebase-crashlytics-ktx" }
 firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx" }
+firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 google-firebase-crashlytics-ktx = { module = "com.google.firebase:firebase-crashlytics-ktx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

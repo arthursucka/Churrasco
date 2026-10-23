@@ -2,7 +2,8 @@
 package com.longynus.churrasco
 
 import android.content.Context
-import android.util.Log
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -12,44 +13,52 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
     private const val BASE_URL = "https://fcm-server-oe8u.onrender.com/"
     private var initialized = false
-    private lateinit var retrofit: Retrofit
+    private lateinit var api: ApiService
 
     fun init(context: Context) {
         if (initialized) return
 
-        val prefs = context.getSharedPreferences("ChurrascoApp", Context.MODE_PRIVATE)
-
-        val client = OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            })
+        val builder = OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val userName = prefs.getString("userName", "") ?: ""
-                Log.d("RETROFIT", "Adicionando header X-User: $userName")
-                val newRequest = chain.request().newBuilder()
-                    .addHeader("X-User", userName)
-                    .build()
-                chain.proceed(newRequest)
+                // O backend só aceita o ID token do Firebase Auth como prova de identidade.
+                val request = chain.request().newBuilder()
+                currentIdToken()?.let { request.header("Authorization", "Bearer $it") }
+                chain.proceed(request.build())
             }
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .callTimeout(20, TimeUnit.SECONDS)
-            .build()
+            // O servidor no Render gratuito pode levar ~1 min para acordar.
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(75, TimeUnit.SECONDS)
 
-        retrofit = Retrofit.Builder()
+        if (BuildConfig.DEBUG) {
+            builder.addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BASIC
+            })
+        }
+
+        api = Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(client)
+            .client(builder.build())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+            .create(ApiService::class.java)
 
         initialized = true
     }
 
+    // Roda na thread do OkHttp, então pode esperar o token (o SDK renova quando expira).
+    private fun currentIdToken(): String? {
+        val user = FirebaseAuth.getInstance().currentUser ?: return null
+        return runCatching {
+            Tasks.await(user.getIdToken(false), 20, TimeUnit.SECONDS).token
+        }.getOrNull()
+    }
+
     val instance: ApiService
         get() {
-            check(::retrofit.isInitialized) {
+            check(initialized) {
                 "RetrofitClient not initialized. Call RetrofitClient.init(context) in Application.onCreate()"
             }
-            return retrofit.create(ApiService::class.java)
+            return api
         }
 }

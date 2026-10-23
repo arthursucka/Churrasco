@@ -44,5 +44,8 @@ data class Churrasco(
     /**
      * Lista com os nomes dos convidados que recusaram o convite.
      */
-    val guestsDeclined: List<String> = emptyList()
+    val guestsDeclined: List<String> = emptyList(),
+
+    /** Início do evento em epoch ms, calculado pelo servidor no horário de São Paulo. */
+    val eventStartsAt: Long? = null
 )

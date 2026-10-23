@@ -21,11 +21,12 @@ android {
 
     defaultConfig {
         applicationId = "com.longynus.churrasco"
-        minSdk = 21
+        // Firebase Auth exige Android 6.0+
+        minSdk = 23
         targetSdk = 35
 
-        versionCode = 19
-        versionName = "1.18"
+        versionCode = 20
+        versionName = "1.19"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,6 +65,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.2"
@@ -104,8 +106,9 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
 
-    // Firebase (Messaging, Crashlytics, Realtime DB)
+    // Firebase (Auth, Messaging, Crashlytics, Realtime DB)
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.crashlytics.ktx)
     implementation(libs.firebase.database.ktx)

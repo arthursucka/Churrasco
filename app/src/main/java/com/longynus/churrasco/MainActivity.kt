@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -27,12 +26,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prefs = getSharedPreferences("ChurrascoApp", MODE_PRIVATE)
-        userName = prefs.getString("userName", null) ?: ""
-        val registered = prefs.getBoolean("userRegistered", false)
-        Log.d("MainActivity", "Recuperado de prefs: $userName")
-
-        if (userName.isBlank() || !registered) {
+        if (!AuthSession.isReady(this)) {
             startActivity(Intent(this, LoginActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             })
@@ -40,6 +34,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        userName = AuthSession.userName(this)
         setContentView(R.layout.activity_main)
 
         txtGreeting = findViewById(R.id.txtGreeting)
@@ -79,20 +74,15 @@ class MainActivity : AppCompatActivity() {
 
     private fun confirmSwitchUser() {
         AlertDialog.Builder(this)
-            .setTitle("Trocar usuário?")
-            .setMessage("Você vai voltar para a tela de entrada. Seus churrascos continuam salvos.")
+            .setTitle("Sair da conta?")
+            .setMessage("Você vai voltar para a tela de entrada e deixa de receber notificações neste celular. Seus churrascos continuam salvos.")
             .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Trocar") { _, _ ->
-                getSharedPreferences("ChurrascoApp", MODE_PRIVATE)
-                    .edit()
-                    .remove("userName")
-                    .remove("userRegistered")
-                    .remove("lastFcmToken")
-                    .apply()
-
-                startActivity(Intent(this, LoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                })
+            .setPositiveButton("Sair") { _, _ ->
+                AuthSession.signOut(this) {
+                    startActivity(Intent(this, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    })
+                }
             }
             .show()
     }

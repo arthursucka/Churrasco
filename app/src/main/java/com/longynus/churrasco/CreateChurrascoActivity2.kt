@@ -3,7 +3,6 @@ package com.longynus.churrasco
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -259,10 +258,6 @@ class CreateChurrascoActivity2 : AppCompatActivity() {
                     rootLayout.hideLoading()
                     btnConfirmar.isEnabled = selectedGuests().isNotEmpty()
 
-                    Log.d("CREATE_CHURRASCO", "Raw response: $response")
-                    Log.d("CREATE_CHURRASCO", "Body: ${response.body()}")
-                    Log.d("CREATE_CHURRASCO", "Code: ${response.code()}")
-
                     val resp = response.body()
                     if (response.isSuccessful && resp?.success == true && !resp.id.isNullOrBlank()) {
                         Toast.makeText(
@@ -276,7 +271,9 @@ class CreateChurrascoActivity2 : AppCompatActivity() {
                         startActivity(intent)
                         finish()
                     } else {
-                        rootLayout.showErrorDialog(resp?.message ?: "Não conseguimos criar o churrasco.")
+                        rootLayout.showErrorDialog(
+                            resp?.message ?: response.apiMessage("Não conseguimos criar o churrasco.")
+                        )
                     }
                 }
 
