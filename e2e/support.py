@@ -137,8 +137,11 @@ def usable_area(root):
         upper = bounds(toolbar)[3]
     for rid in ("bottomBar", "bottomNavigation"):
         bar = find(rid=rid, root=root)
-        if bar is not None:
+        if bar is not None and bounds(bar)[1] > upper + 200:
             lower = min(lower, bounds(bar)[1])
+    kb = keyboard_top()
+    if kb is not None:
+        lower = min(lower, kb)
     return upper, lower
 
 
@@ -156,20 +159,24 @@ def scroll_to(timeout=60, **kw):
             upper, lower = usable_area(root)
             if top >= upper and bottom <= lower:
                 return n
+            step = min(500, (lower - upper) // 2)
             if top < upper:
-                swipe(800, 1300)
+                swipe(upper + 60, upper + 60 + step, ms=900)
             else:
-                swipe(1500, 1000)
+                swipe(lower - 60, lower - 60 - step, ms=900)
         elif not went_to_top:
+            upper, lower = usable_area(root)
             for _ in range(6):
-                swipe(500, 2000, ms=120)
+                swipe(upper + 40, lower - 40, ms=120)
             went_to_top = True
         else:
             snapshot = " | ".join(x.get("text") for x in nodes(root) if x.get("text"))
             if snapshot == last:
                 return None  # chegou ao fim sem achar
             last = snapshot
-            swipe(1800, 600)
+            upper, lower = usable_area(root)
+            # Arrasto lento (sem "fling"): avança ~60% da tela e não pula conteúdo.
+            swipe(lower - 60, lower - 60 - int((lower - upper) * 0.6), ms=900)
         time.sleep(0.6)
     return None
 
@@ -185,12 +192,19 @@ def type_text(value):
     hide_keyboard()
 
 
-def hide_keyboard():
-    # BACK com o teclado fechado sairia da tela, então só aperta se ele estiver aberto.
-    if "mInputShown=true" in adb("shell", "dumpsys", "input_method", check=False):
-        adb("shell", "input", "keyevent", "KEYCODE_BACK")
-        time.sleep(0.7)
+def keyboard_top():
+    """Topo do teclado na tela, ou None se ele estiver fechado."""
+    out = adb("shell", "dumpsys", "window", check=False)
+    for top, bottom in re.findall(r"type=ime frame=\[\d+,(\d+)\]\[\d+,(\d+)\] visibleFrame=\[[^\]]*\]\[[^\]]*\] visible=true", out):
+        if int(bottom) - int(top) > 100:
+            return int(top)
+    return None
 
+
+def hide_keyboard():
+    # Nada a fazer: o "voltar" do adb fecha a tela em Androids novos mesmo com o
+    # teclado aberto. As buscas tratam o teclado como borda de baixo (usable_area).
+    pass
 
 def fill(node, value):
     tap(node)
