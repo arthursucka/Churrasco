@@ -9,9 +9,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:fillViewport="true"
-        android:paddingBottom="88dp">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -20,7 +18,8 @@
             android:paddingStart="24dp"
             android:paddingTop="28dp"
             android:paddingEnd="24dp"
-            android:paddingBottom="32dp">
+            android:paddingBottom="120dp">
+            <!-- 120dp = 32dp de respiro + espaço da barra de navegação de baixo -->
 
             <TextView
                 android:id="@+id/txtTitle"
@@ -271,6 +270,16 @@
                 android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReviewLegacyMain"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/legacy_review_accounts"
+                android:textAllCaps="false"
+                android:visibility="gone" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSwitchUser"
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="match_parent"
@@ -280,15 +289,6 @@
                 android:textAllCaps="false"
                 android:textColor="@color/mainMuted"
                 android:textSize="15sp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnReviewLegacyMain"
-                style="@style/Widget.MaterialComponents.Button.TextButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/legacy_review_accounts"
-                android:textAllCaps="false"
-                android:visibility="gone" />
 
         </LinearLayout>
     </ScrollView>

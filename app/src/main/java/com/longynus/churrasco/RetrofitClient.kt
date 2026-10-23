@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
-    private const val BASE_URL = "https://fcm-server-oe8u.onrender.com/"
+    private val BASE_URL = BuildConfig.API_BASE_URL
     private var initialized = false
     private lateinit var api: ApiService
 

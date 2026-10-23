@@ -29,6 +29,9 @@ android {
         versionName = "1.19"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_BASE_URL", "\"https://fcm-server-oe8u.onrender.com/\"")
+        buildConfigField("boolean", "LOCAL_BACKEND", "false")
     }
 
     signingConfigs {
@@ -52,6 +55,16 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        // Teste de ponta a ponta no emulador Android contra o backend local
+        // (CHURRASCO_LOCAL_TEST=1) e os emuladores do Firebase. 10.0.2.2 é o
+        // localhost da máquina vista de dentro do emulador.
+        create("localTest") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
+            buildConfigField("boolean", "LOCAL_BACKEND", "true")
         }
     }
 
