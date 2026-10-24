@@ -1,5 +1,6 @@
 package com.longynus.churrasco
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
@@ -159,7 +160,7 @@ class LoginActivity : AppCompatActivity() {
         busy {
             runCatching { auth.sendPasswordResetEmail(email).await() }
             // Mesma resposta com ou sem conta, para não revelar quais e-mails existem.
-            AlertDialog.Builder(this).setTitle(R.string.login_reset_title)
+            MaterialAlertDialogBuilder(this).setTitle(R.string.login_reset_title)
                 .setMessage(getString(R.string.login_reset_body, email))
                 .setPositiveButton(R.string.ok, null).show()
         }
@@ -258,7 +259,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun confirmLegacyRequest() {
         val name = readProfileName() ?: return
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(getString(R.string.login_legacy_confirm_title, name))
             .setMessage(R.string.login_legacy_confirm_body)
             .setNegativeButton(R.string.cancel, null)

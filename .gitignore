@@ -23,3 +23,6 @@ keystore.properties
 
 # Configurações locais do Android Studio
 .idea/
+
+# Logs do daemon do Kotlin
+.kotlin/

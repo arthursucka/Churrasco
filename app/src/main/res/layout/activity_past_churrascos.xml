@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
@@ -9,32 +9,30 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingStart="24dp"
+        android:paddingStart="16dp"
         android:paddingTop="28dp"
-        android:paddingEnd="24dp"
+        android:paddingEnd="16dp"
         android:paddingBottom="96dp">
 
         <TextView
+            android:textAppearance="@style/TextAppearance.MandaChurras.Title"
             android:id="@+id/txtTitlePast"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/past_list_title"
             android:textColor="@color/mainInk"
-            android:textSize="30sp"
-            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
+            android:textAppearance="@style/TextAppearance.MandaChurras.Body"
             android:id="@+id/txtSubtitlePast"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:lineSpacingExtra="3dp"
+            android:layout_marginTop="8dp"
             android:text="@string/past_list_subtitle"
             android:textColor="@color/mainMuted"
-            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/txtTitlePast" />
@@ -58,7 +56,7 @@
             android:background="@drawable/bg_empty_state"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="22dp"
+            android:padding="24dp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -66,23 +64,21 @@
             app:layout_constraintTop_toBottomOf="@id/txtSubtitlePast">
 
             <TextView
+                android:textAppearance="@style/TextAppearance.MandaChurras.Heading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/empty_past_title"
-                android:textColor="@color/mainInk"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textColor="@color/mainInk" />
 
             <TextView
+                android:textAppearance="@style/TextAppearance.MandaChurras.Body"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:gravity="center"
-                android:lineSpacingExtra="3dp"
                 android:text="@string/empty_past_body"
-                android:textColor="@color/mainMuted"
-                android:textSize="15sp" />
+                android:textColor="@color/mainMuted" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -91,9 +87,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@color/mainSurface"
-        app:itemIconTint="@color/bottom_nav_item_color"
-        app:itemTextColor="@color/bottom_nav_item_color"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/menu_bottom_navigation" />
 
@@ -113,36 +106,30 @@
             android:orientation="vertical">
 
             <TextView
+                android:textAppearance="@style/TextAppearance.MandaChurras.Title"
                 android:id="@+id/txtConnectionTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/connection_state_title"
-                android:textColor="@color/mainInk"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:textColor="@color/mainInk" />
 
             <TextView
+                android:textAppearance="@style/TextAppearance.MandaChurras.Body"
                 android:id="@+id/txtConnectionMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:gravity="center"
-                android:lineSpacingExtra="4dp"
                 android:text="@string/connection_state_message"
-                android:textColor="@color/mainInk"
-                android:textSize="16sp" />
+                android:textColor="@color/mainInk" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnRetryConnection"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="@string/connection_state_retry"
-                android:textAllCaps="false"
-                android:textColor="@color/md_on_primary"
-                app:backgroundTint="@color/mainPrimary"
-                app:cornerRadius="16dp" />
+                android:text="@string/connection_state_retry" />
 
         </LinearLayout>
     </FrameLayout>

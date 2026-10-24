@@ -1,5 +1,8 @@
 package com.longynus.churrasco.items
 
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
+import com.longynus.churrasco.R
 import com.longynus.churrasco.data.model.Contribution
 import java.text.NumberFormat
 import java.util.Locale
@@ -25,9 +28,17 @@ sealed class ItemField(val key: String, val label: String) {
     }
 }
 
+/** As sete famílias de cor das categorias (tokens cat-*). */
+enum class Family(@ColorRes val color: Int) {
+    Carne(R.color.cat_carne), Brasa(R.color.cat_brasa), Gelo(R.color.cat_gelo), Bebida(R.color.cat_bebida),
+    Padaria(R.color.cat_padaria), Horta(R.color.cat_horta), Doce(R.color.cat_doce),
+}
+
 data class ItemCategory(
     val name: String,
-    val emoji: String,
+    val family: Family,
+    /** Ilustração da categoria (prompts ITEM-xx); null enquanto não foi gerada. */
+    @DrawableRes val illustration: Int?,
     val fields: List<ItemField>,
     /** Nomes usados pela v1 que caem nesta categoria (só para exibir eventos antigos). */
     val aliases: List<String> = emptyList(),
@@ -47,74 +58,72 @@ object ItemCatalog {
     const val OTHER = "outro"
 
     val categories: List<ItemCategory> = listOf(
-        ItemCategory("Carne bovina", "🥩", listOf(
+        ItemCategory("Carne bovina", Family.Carne, R.drawable.ill_item_carne_bovina, listOf(
             ItemField.Choice("corte", "Corte", listOf("Picanha", "Fraldinha", "Contrafilé", "Maminha", "Alcatra", "Costela", "Cupim", "Ancho", "Chorizo")),
             kg(), TEMPERO,
         ), aliases = listOf("Carne Bovina")),
-        ItemCategory("Carne suína", "🐖", listOf(
+        ItemCategory("Carne suína", Family.Carne, R.drawable.ill_item_carne_suina, listOf(
             ItemField.Choice("corte", "Corte", listOf("Costelinha", "Lombo", "Panceta", "Bisteca", "Pernil", "Copa lombo")),
             kg(), TEMPERO,
         ), aliases = listOf("Carne Suína")),
-        ItemCategory("Frango", "🍗", listOf(
+        ItemCategory("Frango", Family.Carne, R.drawable.ill_item_frango, listOf(
             ItemField.Choice("corte", "Corte", listOf("Coxinha da asa", "Asa", "Sobrecoxa", "Tulipa", "Peito")),
             kg(), TEMPERO,
         )),
-        ItemCategory("Linguiça", "🌭", listOf(
+        ItemCategory("Linguiça", Family.Carne, R.drawable.ill_item_linguica, listOf(
             ItemField.Choice("tipo", "Tipo", listOf("Toscana", "Cuiabana", "Apimentada", "De frango", "Calabresa")),
             kg(),
         )),
-        ItemCategory("Coração", "❤️", listOf(kg(listOf(0.5, 1.0, 2.0)), TEMPERO)),
-        ItemCategory("Queijo", "🧀", listOf(
+        ItemCategory("Coração", Family.Carne, R.drawable.ill_item_coracao, listOf(kg(listOf(0.5, 1.0, 2.0)), TEMPERO)),
+        ItemCategory("Queijo", Family.Padaria, null, listOf(
             ItemField.Choice("tipo", "Tipo", listOf("Coalho", "Provolone", "Muçarela de bola")),
             units("pacote", "pacotes", listOf(1.0, 2.0, 3.0)),
         ), aliases = listOf("Queijo Coalho", "Queijo Provolone")),
-        ItemCategory("Pão de alho", "🧄", listOf(
+        ItemCategory("Pão de alho", Family.Padaria, null, listOf(
             ItemField.Choice("sabor", "Sabor", listOf("Tradicional", "Com queijo", "Apimentado")),
             units("pacote", "pacotes", listOf(1.0, 2.0, 3.0)),
         ), aliases = listOf("Pão de Alho")),
-        ItemCategory("Pão", "🍞", listOf(
+        ItemCategory("Pão", Family.Padaria, null, listOf(
             ItemField.Choice("tipo", "Tipo", listOf("Francês", "Baguete", "De queijo")),
             units("unidade", "unidades", listOf(10.0, 20.0, 30.0), step = 5.0),
         )),
-        ItemCategory("Farofa", "🥣", listOf(
+        ItemCategory("Farofa", Family.Padaria, null, listOf(
             ItemField.Choice("tipo", "Tipo", listOf("Pronta", "Caseira", "Com bacon")),
             units("pacote", "pacotes", listOf(1.0, 2.0)),
         )),
-        ItemCategory("Vinagrete", "🥗", listOf(units("pote", "potes", listOf(1.0, 2.0)))),
-        ItemCategory("Carvão", "🔥", listOf(kg(listOf(3.0, 5.0, 10.0)).let { ItemField.Quantity(it.key, it.label, "kg", 1.0, it.presets) })),
-        ItemCategory("Gelo", "🧊", listOf(units("saco de 5 kg", "sacos de 5 kg", listOf(1.0, 2.0, 4.0)))),
-        ItemCategory("Cerveja", "🍺", listOf(
+        ItemCategory("Vinagrete", Family.Horta, null, listOf(units("pote", "potes", listOf(1.0, 2.0)))),
+        ItemCategory("Carvão", Family.Brasa, null, listOf(kg(listOf(3.0, 5.0, 10.0)).let { ItemField.Quantity(it.key, it.label, "kg", 1.0, it.presets) })),
+        ItemCategory("Gelo", Family.Gelo, null, listOf(units("saco de 5 kg", "sacos de 5 kg", listOf(1.0, 2.0, 4.0)))),
+        ItemCategory("Cerveja", Family.Bebida, null, listOf(
             ItemField.Choice("marca", "Marca", listOf("Heineken", "Brahma", "Skol", "Original", "Amstel", "Spaten")),
             ItemField.Choice("embalagem", "Embalagem", listOf("Lata 350 ml", "Latão 473 ml", "Long neck", "Garrafa 600 ml")),
             units("unidade", "unidades", listOf(6.0, 12.0, 24.0), step = 6.0),
         )),
-        ItemCategory("Refrigerante", "🥤", listOf(
+        ItemCategory("Refrigerante", Family.Bebida, null, listOf(
             ItemField.Choice("sabor", "Sabor", listOf("Cola", "Cola zero", "Guaraná", "Laranja", "Limão")),
             ItemField.Choice("tamanho", "Tamanho", listOf("2 L", "1,5 L", "Lata 350 ml")),
             units("unidade", "unidades", listOf(1.0, 2.0, 4.0, 6.0)),
         )),
-        ItemCategory("Água", "💧", listOf(
+        ItemCategory("Água", Family.Gelo, null, listOf(
             ItemField.Choice("tipo", "Tipo", listOf("Sem gás", "Com gás"), allowCustom = false),
             units("garrafa", "garrafas", listOf(2.0, 6.0, 12.0)),
         )),
-        ItemCategory("Destilados", "🥃", listOf(
+        ItemCategory("Destilados", Family.Bebida, null, listOf(
             ItemField.Choice("tipo", "Tipo", listOf("Cachaça", "Vodka", "Whisky", "Gin")),
             units("garrafa", "garrafas", listOf(1.0, 2.0)),
         )),
-        ItemCategory("Limão", "🍋", listOf(units("unidade", "unidades", listOf(10.0, 20.0), step = 5.0))),
-        ItemCategory("Sobremesa", "🍰", listOf(
+        ItemCategory("Limão", Family.Horta, null, listOf(units("unidade", "unidades", listOf(10.0, 20.0), step = 5.0))),
+        ItemCategory("Sobremesa", Family.Doce, null, listOf(
             ItemField.Choice("tipo", "O quê", listOf("Pudim", "Brownie", "Pavê", "Sorvete", "Frutas")),
         )),
-        ItemCategory("Descartáveis", "🍽️", listOf(
+        ItemCategory("Descartáveis", Family.Brasa, null, listOf(
             ItemField.Choice("tipo", "O quê", listOf("Pratos", "Copos", "Talheres", "Guardanapos", "Sacos de lixo")),
         )),
-        ItemCategory(OTHER, "✍️", emptyList()),
+        ItemCategory(OTHER, Family.Doce, null, emptyList()),
     )
 
     fun find(name: String): ItemCategory? =
         categories.firstOrNull { it.name.equals(name, ignoreCase = true) || name in it.aliases }
-
-    fun emoji(name: String) = find(name)?.emoji ?: "🍽️"
 
     fun label(name: String) = if (name == OTHER) "Outro" else (find(name)?.name ?: name)
 

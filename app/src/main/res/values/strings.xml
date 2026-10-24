@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Churrasco</string>
+    <string name="app_name">Manda Churras</string>
+    <string name="items_less">Diminuir quantidade</string>
+    <string name="items_more">Aumentar quantidade</string>
+    <plurals name="items_others_bring">
+        <item quantity="one">%1$d já leva</item>
+        <item quantity="other">%1$d já levam</item>
+    </plurals>
+    <string name="brand_wordmark" translatable="false">manda churras</string>
     <string name="app_tagline">Organize o churrasco sem confusão.</string>
 
     <!-- Comuns -->
@@ -27,7 +34,7 @@
     <string name="login_sign_in">Entrar</string>
     <string name="login_create_account">Criar conta</string>
     <string name="login_or">ou</string>
-    <string name="login_google">Entrar com Google</string>
+    <string name="login_google">Continuar com o Google</string>
     <string name="login_google_not_configured">O login com Google ainda não foi configurado neste app. Use e-mail e senha.</string>
     <string name="login_forgot_password">Esqueci minha senha</string>
     <string name="login_verify_title">Confirme seu e-mail</string>
@@ -38,7 +45,7 @@
     <string name="login_title">Como seus amigos te chamam?</string>
     <string name="login_subtitle">Esse nome aparece nos convites, no chat e na lista de quem leva cada coisa.</string>
     <string name="login_field_label">Seu nome</string>
-    <string name="login_button">Entrar no Churrasco</string>
+    <string name="login_button">Entrar</string>
     <string name="login_legacy_button">Já usava o app com esse nome</string>
     <string name="login_legacy_confirm_title">Recuperar \"%1$s\"?</string>
     <string name="login_legacy_confirm_body">O administrador vai conferir se esse nome é mesmo seu antes de ligá-lo a esta conta. Depois da aprovação, seus churrascos antigos aparecem aqui.</string>
@@ -63,7 +70,7 @@
     <string name="login_generic">Não conseguimos entrar agora. Tente de novo.</string>
 
     <!-- Tela principal -->
-    <string name="main_title">Churrasco</string>
+    <string name="main_title">Manda Churras</string>
     <string name="main_greeting">Oi, %1$s</string>
     <string name="main_welcome_title">Vamos organizar o próximo churrasco?</string>
     <string name="main_welcome_body">Crie o evento, convide pelo link ou pela sua lista de amigos e combine quem leva o quê.</string>
@@ -78,8 +85,8 @@
     <string name="main_card_history_body">Consulte os churrascos que já passaram.</string>
     <string name="main_card_open">Abrir</string>
     <string name="main_section_account">Conta</string>
-    <string name="main_friends">👥  Amigos</string>
-    <string name="main_profile">👤  Meu perfil e chave Pix</string>
+    <string name="main_friends">Amigos</string>
+    <string name="main_profile">Meu perfil e chave Pix</string>
     <string name="trocar_usuario">Sair da conta</string>
     <string name="signout_title">Sair da conta?</string>
     <string name="signout_body">Você volta para a tela de entrada e deixa de receber notificações e lembretes neste celular. Seus churrascos continuam salvos.</string>
@@ -103,13 +110,13 @@
     <string name="empty_invites_title">Nenhum convite pendente</string>
     <string name="empty_invites_body">Se alguém te convidar para um churrasco, o convite aparece nesta tela.</string>
     <string name="details_button">Ver detalhes</string>
-    <string name="list_local">📍 %1$s</string>
+    <string name="list_local">%1$s</string>
     <string name="list_you_organize">Você organiza</string>
     <string name="list_invited_by">Convite de %1$s</string>
     <string name="list_organized_by">De %1$s · %2$d confirmados</string>
     <!-- Só aparecem na prévia do editor de layout; o código troca. -->
     <string name="_01_01_2025_18_00">01/01/2025 às 18:00</string>
-    <string name="local_minha_casa">📍 Minha casa</string>
+    <string name="local_minha_casa">Minha casa</string>
     <string name="criado_por_arthur">Você organiza</string>
     <string name="ola_usuario">Olá!</string>
 
@@ -119,8 +126,8 @@
     <string name="form_subtitle">O essencial para todo mundo chegar na hora certa e no lugar certo.</string>
     <string name="form_when">Quando</string>
     <string name="form_when_hint">Escolha a data e o horário do encontro.</string>
-    <string name="form_pick_date">📅 Data</string>
-    <string name="form_pick_time">🕒 Horário</string>
+    <string name="form_pick_date">Data</string>
+    <string name="form_pick_time">Horário</string>
     <string name="form_timezone_note">Horário de São Paulo (Brasília).</string>
     <string name="form_where">Onde</string>
     <string name="form_where_hint">Um nome fácil de reconhecer e o endereço para o Maps e o Waze.</string>
@@ -139,7 +146,7 @@
     <string name="form_need_future">Escolha uma data e um horário que ainda vão chegar.</string>
     <string name="form_need_local">Informe um local com pelo menos 3 letras.</string>
     <string name="form_saved">Churrasco atualizado. Avisamos quem vai.</string>
-    <string name="created_title">Churrasco criado! 🔥</string>
+    <string name="created_title">Churrasco marcado!</string>
     <string name="created_body">Agora chame a galera: mande o link de convite pelo WhatsApp ou por qualquer outro app.</string>
 
     <!-- Itens -->
@@ -159,7 +166,7 @@
     <string name="items_other_required">Descreva o que você vai levar em \"Outro\".</string>
     <string name="items_confirm">Confirmar presença</string>
     <string name="items_save">Salvar meus itens</string>
-    <string name="items_confirmed">Presença confirmada! 🎉</string>
+    <string name="items_confirmed">Presença confirmada!</string>
     <string name="items_confirmed_empty">Presença confirmada.</string>
     <string name="items_none_title">Confirmar sem levar nada?</string>
     <string name="items_none_body">Você pode escolher itens depois, se quiser.</string>
@@ -175,8 +182,8 @@
     <string name="details_invite_title">Convite</string>
     <string name="details_heading">Churrasco de %1$s</string>
     <string name="details_timezone">Horário de São Paulo</string>
-    <string name="details_open_maps">🗺️ Maps</string>
-    <string name="details_open_waze">🚗 Waze</string>
+    <string name="details_open_maps">Maps</string>
+    <string name="details_open_waze">Waze</string>
     <string name="details_edit">Editar data, local ou convidados</string>
     <string name="details_cancel_event">Cancelar churrasco</string>
     <string name="details_not_found">Esse churrasco não existe mais. Talvez tenha sido cancelado.</string>
@@ -187,7 +194,7 @@
     <string name="status_declined_title">Você recusou este convite</string>
     <string name="status_declined_body">Se mudar de ideia, ainda dá tempo.</string>
     <string name="status_changed_mind">Mudei de ideia, vou!</string>
-    <string name="status_confirmed_title">Você vai! 🎉</string>
+    <string name="status_confirmed_title">Você vai!</string>
     <string name="status_confirmed_body">Confira os combinados, as contas e o chat aqui embaixo.</string>
     <string name="status_change_items">Alterar meus itens</string>
     <string name="status_cancel_presence">Cancelar minha presença</string>
@@ -213,7 +220,7 @@
 
     <!-- Convites -->
     <string name="invite_title">Convite</string>
-    <string name="invite_share_action">📤 Convidar com link</string>
+    <string name="invite_share_action">Convidar com link</string>
     <string name="invite_share_title">Mandar convite por</string>
     <string name="invite_share_subject">Convite para churrasco</string>
     <string name="invite_share_text">Bora pro churrasco? 🍖\n%1$s em %2$s.\nConfirme e diga o que vai levar: %3$s</string>
@@ -234,7 +241,7 @@
     <string name="friends_decline">Recusar</string>
     <string name="friends_list_title">Seus amigos (%1$d)</string>
     <string name="friends_empty_title">Ninguém por aqui ainda</string>
-    <string name="friends_empty_body">Adicione pelo e-mail que a pessoa usa no Churrasco.</string>
+    <string name="friends_empty_body">Adicione pelo e-mail que a pessoa usa no Manda Churras.</string>
     <string name="friends_outgoing_title">Aguardando resposta</string>
     <string name="friends_remove_title">Remover %1$s?</string>
     <string name="friends_remove_body">Vocês continuam nos churrascos em que já estão; só deixam de poder convidar um ao outro direto.</string>
@@ -254,7 +261,7 @@
     <string name="costs_total">Dividido entre %1$d pessoas · %2$s para cada</string>
     <string name="costs_you_owe">Você manda %1$s para %2$s</string>
     <string name="costs_owes_you">%1$s te manda %2$s</string>
-    <string name="costs_you_are_even">Você está quite. 👌</string>
+    <string name="costs_you_are_even">Você está quite.</string>
     <string name="costs_others">Outros acertos</string>
     <string name="costs_pay_pix">Pagar com Pix</string>
     <string name="costs_no_pix_key">%1$s ainda não cadastrou a chave Pix no perfil.</string>
@@ -278,7 +285,7 @@
     <!-- Mapa -->
     <string name="map_title">Mapa ao vivo</string>
     <string name="map_subtitle">Libera 1 hora antes. Quem toca em \"Estou a caminho\" aparece aqui.</string>
-    <string name="map_share">📍 Estou a caminho</string>
+    <string name="map_share">Estou a caminho</string>
     <string name="map_stop">Parar de compartilhar</string>
     <string name="map_sharing_until">Compartilhando sua localização até %1$s, mesmo com a tela bloqueada.</string>
     <string name="map_window_open">O mapa está aberto. Toque em \"Estou a caminho\" para aparecer.</string>
@@ -306,8 +313,8 @@
     <string name="push_channel">Convites e mensagens</string>
     <string name="push_channel_description">Convites, mensagens do chat e mudanças nos churrascos</string>
     <string name="reminder_channel">Lembretes</string>
-    <string name="reminder_title_tomorrow">Churrasco amanhã! 🍖</string>
-    <string name="reminder_title_soon">Churrasco daqui a 2 horas 🔥</string>
+    <string name="reminder_title_tomorrow">O churrasco é amanhã</string>
+    <string name="reminder_title_soon">O churrasco começa em 2 horas</string>
     <string name="reminder_body">Às %1$s em %2$s. Confira o que você vai levar.</string>
 
     <!-- Contas antigas (administrador) -->

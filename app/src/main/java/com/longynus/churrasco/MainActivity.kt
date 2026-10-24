@@ -1,5 +1,6 @@
 package com.longynus.churrasco
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -79,7 +80,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun confirmSignOut() {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.signout_title)
             .setMessage(R.string.signout_body)
             .setNegativeButton(R.string.cancel, null)

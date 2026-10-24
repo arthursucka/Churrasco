@@ -48,7 +48,7 @@ class InviteLinkActivity : ScreenActivity() {
         setupScreen(getString(R.string.invite_title))
         val token = tokenFrom(intent)
         if (token == null) {
-            render { emptyState("🔗", getString(R.string.invite_invalid_title), getString(R.string.invite_invalid_body)) }
+            render { emptyState(R.drawable.ic_link, getString(R.string.invite_invalid_title), getString(R.string.invite_invalid_body)) }
             return
         }
         if (!AuthSession.isReady(this)) {

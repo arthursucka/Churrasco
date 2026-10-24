@@ -1,6 +1,7 @@
 package com.longynus.churrasco
 
 import com.longynus.churrasco.data.model.Contribution
+import com.longynus.churrasco.items.Family
 import com.longynus.churrasco.items.ItemCatalog
 import com.longynus.churrasco.items.ItemField
 import com.longynus.churrasco.reminders.ReminderScheduler
@@ -24,7 +25,9 @@ class ReminderAndCatalogTest {
         assertEquals("Carne bovina", ItemCatalog.find("Carne Bovina")?.name)
         assertEquals("Queijo", ItemCatalog.find("Queijo Coalho")?.name)
         assertNotNull(ItemCatalog.find(ItemCatalog.OTHER))
-        assertEquals("🍽️", ItemCatalog.emoji("Algo que não existe"))
+        assertEquals(null, ItemCatalog.find("Algo que não existe"))
+        // As carnes já têm ilustração; as demais categorias usam o marcador até a imagem chegar.
+        assertTrue(ItemCatalog.categories.filter { it.family == Family.Carne }.all { it.illustration != null })
         val names = ItemCatalog.categories.map { it.name }
         assertEquals(names.size, names.toSet().size)
     }

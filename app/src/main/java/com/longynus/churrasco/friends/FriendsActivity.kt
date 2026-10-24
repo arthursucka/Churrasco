@@ -5,6 +5,7 @@ import android.text.InputType
 import com.longynus.churrasco.R
 import com.longynus.churrasco.data.ChurrascoRepository
 import com.longynus.churrasco.data.model.FriendsPayload
+import com.longynus.churrasco.ui.avatar
 import com.longynus.churrasco.ui.ScreenActivity
 import com.longynus.churrasco.ui.TextRole
 import com.longynus.churrasco.ui.card
@@ -54,7 +55,7 @@ class FriendsActivity : ScreenActivity() {
             section(getString(R.string.friends_incoming_title), getString(R.string.friends_incoming_subtitle))
             data.incoming.forEach { friend ->
                 card(top = 12) {
-                    row("👋", friend.displayName, friend.email, top = 0)
+                    row(context.avatar(friend.displayName, friend.uid), friend.displayName, friend.email, top = 0)
                     primaryButton(getString(R.string.friends_accept)) {
                         call({ ChurrascoRepository.acceptFriend(friend.id) }) { load() }
                     }
@@ -67,11 +68,11 @@ class FriendsActivity : ScreenActivity() {
 
         section(getString(R.string.friends_list_title, data.friends.size))
         if (data.friends.isEmpty()) {
-            emptyState("🤝", getString(R.string.friends_empty_title), getString(R.string.friends_empty_body))
+            emptyState(R.drawable.ic_users_three, getString(R.string.friends_empty_title), getString(R.string.friends_empty_body))
         } else {
             card(top = 12) {
                 data.friends.forEachIndexed { i, friend ->
-                    row(friend.displayName.take(1).uppercase(), friend.displayName, friend.email, top = if (i == 0) 0 else 12) {
+                    row(context.avatar(friend.displayName, friend.uid), friend.displayName, friend.email, top = if (i == 0) 0 else 12) {
                         confirm(
                             getString(R.string.friends_remove_title, friend.displayName),
                             getString(R.string.friends_remove_body),
@@ -87,7 +88,7 @@ class FriendsActivity : ScreenActivity() {
             section(getString(R.string.friends_outgoing_title))
             card(top = 12) {
                 data.outgoing.forEachIndexed { i, friend ->
-                    row("⏳", friend.displayName, friend.email, top = if (i == 0) 0 else 12)
+                    row(context.avatar(friend.displayName, friend.uid), friend.displayName, friend.email, top = if (i == 0) 0 else 12)
                 }
             }
         }

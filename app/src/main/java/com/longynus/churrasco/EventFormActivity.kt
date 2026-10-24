@@ -97,7 +97,7 @@ class EventFormActivity : ScreenActivity() {
             )
             if (invitable.isEmpty()) {
                 emptyState(
-                    "🤝",
+                    R.drawable.ic_users_three,
                     getString(if (friends.isEmpty()) R.string.form_no_friends_title else R.string.form_all_invited_title),
                     getString(R.string.form_no_friends_body),
                     action = getString(R.string.form_manage_friends),

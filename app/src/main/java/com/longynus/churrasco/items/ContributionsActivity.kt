@@ -1,16 +1,19 @@
 package com.longynus.churrasco.items
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.TypedValue
 import android.view.Gravity
+import android.view.View
 import android.widget.LinearLayout
+import android.widget.Space
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.TextViewCompat
 import androidx.lifecycle.ViewModel
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.TextInputEditText
 import com.longynus.churrasco.AuthSession
 import com.longynus.churrasco.R
@@ -19,12 +22,11 @@ import com.longynus.churrasco.data.model.ContributionInput
 import com.longynus.churrasco.data.model.Event
 import com.longynus.churrasco.ui.ScreenActivity
 import com.longynus.churrasco.ui.TextRole
-import com.longynus.churrasco.ui.buttonRow
 import com.longynus.churrasco.ui.card
+import com.longynus.churrasco.ui.categoryBadge
 import com.longynus.churrasco.ui.chips
 import com.longynus.churrasco.ui.dp
 import com.longynus.churrasco.ui.primaryButton
-import com.longynus.churrasco.ui.secondaryButton
 import com.longynus.churrasco.ui.section
 import com.longynus.churrasco.ui.text
 import com.longynus.churrasco.ui.textButton
@@ -100,25 +102,11 @@ class ContributionsActivity : ScreenActivity() {
             section(getString(R.string.items_pick_title), getString(R.string.items_pick_subtitle), top = 24)
             val othersCount = event.contributions.filter { it.uid != AuthSession.uid(this@ContributionsActivity) }
                 .groupingBy { ItemCatalog.find(it.category)?.name ?: it.category }.eachCount()
-            addView(ChipGroup(context).apply {
-                chipSpacingHorizontal = context.dp(8)
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = context.dp(12) }
-                ItemCatalog.categories.forEach { category ->
-                    val count = othersCount[category.name] ?: 0
-                    addView(Chip(context).apply {
-                        text = buildString {
-                            append(category.emoji).append(' ').append(ItemCatalog.label(category.name))
-                            if (count > 0) append(" · ").append(count)
-                        }
-                        contentDescription = if (count > 0) getString(R.string.items_chip_with_others, ItemCatalog.label(category.name), count) else ItemCatalog.label(category.name)
-                        setOnClickListener {
-                            vm.drafts += Draft(category)
-                            draw()
-                            scroll.post { scroll.fullScroll(android.view.View.FOCUS_DOWN) }
-                        }
-                    })
-                }
-            })
+            categoryGrid(othersCount) { category ->
+                vm.drafts += Draft(category)
+                draw()
+                scroll.post { scroll.fullScroll(android.view.View.FOCUS_DOWN) }
+            }
             text(getString(R.string.items_count_hint), TextRole.Caption, top = 8)
 
             if (vm.drafts.isEmpty()) {
@@ -132,14 +120,48 @@ class ContributionsActivity : ScreenActivity() {
         }
     }
 
+    /** Grade de categorias: a ilustração no círculo da família, o nome e quantos outros já levam. */
+    private fun LinearLayout.categoryGrid(othersCount: Map<String, Int>, onPick: (ItemCategory) -> Unit) {
+        ItemCatalog.categories.chunked(3).forEachIndexed { index, rowItems ->
+            val line = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                    .apply { topMargin = context.dp(if (index == 0) 16 else 8) }
+            }
+            addView(line)
+            rowItems.forEach { category ->
+                val label = ItemCatalog.label(category.name)
+                val count = othersCount[category.name] ?: 0
+                line.addView(LinearLayout(context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.CENTER_HORIZONTAL
+                    setPadding(context.dp(4), context.dp(8), context.dp(4), context.dp(8))
+                    isClickable = true
+                    isFocusable = true
+                    val ripple = TypedValue().also { context.theme.resolveAttribute(android.R.attr.selectableItemBackground, it, true) }
+                    setBackgroundResource(ripple.resourceId)
+                    contentDescription = if (count > 0) getString(R.string.items_chip_with_others, label, count) else label
+                    setOnClickListener { onPick(category) }
+                    addView(context.categoryBadge(category, 72))
+                    text(label, TextRole.Strong, top = 8).apply {
+                        gravity = Gravity.CENTER; maxLines = 2; importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                    }
+                    if (count > 0) text(resources.getQuantityString(R.plurals.items_others_bring, count, count), TextRole.Caption, top = 2).apply {
+                        gravity = Gravity.CENTER; importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                    }
+                }, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+            }
+            repeat(3 - rowItems.size) { line.addView(Space(context), LinearLayout.LayoutParams(0, 0, 1f)) }
+        }
+    }
+
     private fun LinearLayout.draftCard(draft: Draft) = card(top = 12) {
         val header = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         addView(header)
+        header.addView(context.categoryBadge(draft.category, 48), LinearLayout.LayoutParams(context.dp(48), context.dp(48)).apply { marginEnd = context.dp(12) })
         header.addView(TextView(context).apply {
-            text = "${draft.category.emoji}  ${ItemCatalog.label(draft.category.name)}"
-            textSize = 20f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setTextColor(getColor(R.color.mainInk))
+            TextViewCompat.setTextAppearance(this, TextRole.Section.style)
+            text = ItemCatalog.label(draft.category.name)
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         })
         header.textButton(getString(R.string.items_remove), top = 0, danger = true) {
@@ -175,27 +197,38 @@ class ContributionsActivity : ScreenActivity() {
         textField(getString(R.string.items_note_hint), draft.note, maxLength = 200, top = 16).watch { draft.note = it }
     }
 
+    /** Contador compacto: pílula surface-sunken com − valor +. */
     private fun LinearLayout.quantityStepper(draft: Draft, field: ItemField.Quantity) {
         lateinit var value: TextView
         fun refresh() { value.text = draft.quantity?.let(field::format) ?: getString(R.string.items_no_quantity) }
-        buttonRow(top = 8) {
-            secondaryButton("−", top = 0) {
-                draft.quantity = ((draft.quantity ?: 0.0) - field.step).takeIf { it > 0 }
-                refresh()
-            }
+        fun stepButton(symbol: String, description: String, onClick: () -> Unit) = TextView(context).apply {
+            TextViewCompat.setTextAppearance(this, TextRole.Section.style)
+            text = symbol
+            gravity = Gravity.CENTER
+            contentDescription = description
+            isClickable = true
+            isFocusable = true
+            val ripple = TypedValue().also { context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, it, true) }
+            setBackgroundResource(ripple.resourceId)
+            setOnClickListener { onClick(); refresh() }
+        }
+        addView(LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundResource(R.drawable.bg_pill_sunken)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, context.dp(48)).apply { topMargin = context.dp(8) }
+            addView(stepButton("−", getString(R.string.items_less)) { draft.quantity = ((draft.quantity ?: 0.0) - field.step).takeIf { it > 0 } },
+                LinearLayout.LayoutParams(context.dp(48), context.dp(48)))
             value = TextView(context).apply {
+                TextViewCompat.setTextAppearance(this, TextRole.Strong.style)
+                fontFeatureSettings = "tnum"
                 gravity = Gravity.CENTER
-                textSize = 16f
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
-                setTextColor(getColor(R.color.mainInk))
-                minHeight = context.dp(56)
+                minWidth = context.dp(96)
             }
             addView(value)
-            secondaryButton("+", top = 0) {
-                draft.quantity = (draft.quantity ?: 0.0) + field.step
-                refresh()
-            }
-        }
+            addView(stepButton("+", getString(R.string.items_more)) { draft.quantity = (draft.quantity ?: 0.0) + field.step },
+                LinearLayout.LayoutParams(context.dp(48), context.dp(48)))
+        })
         refresh()
         chips(field.presets.map(field::format), top = 8) { picked ->
             picked.firstOrNull()?.let { label -> draft.quantity = field.presets.firstOrNull { field.format(it) == label }; refresh() }
@@ -219,7 +252,7 @@ class ContributionsActivity : ScreenActivity() {
             }
         }
         if (inputs.isEmpty() && vm.event?.isOrganizer != true) {
-            AlertDialog.Builder(this).setTitle(R.string.items_none_title).setMessage(R.string.items_none_body)
+            MaterialAlertDialogBuilder(this).setTitle(R.string.items_none_title).setMessage(R.string.items_none_body)
                 .setNegativeButton(R.string.items_none_back, null)
                 .setPositiveButton(R.string.items_none_confirm) { _, _ -> send() }.show()
         } else send()

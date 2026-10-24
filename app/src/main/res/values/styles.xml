@@ -1,49 +1,230 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Churrasco.Button.Primary" parent="Widget.MaterialComponents.Button">
-        <item name="android:minHeight">52dp</item>
-        <item name="android:paddingStart">24dp</item>
-        <item name="android:paddingEnd">24dp</item>
+    <!-- Escala de tipo do manual: display 40, title 28, heading 20, body 16, caption 13. -->
+    <style name="TextAppearance.MandaChurras.Display" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:fontFamily">@font/bricolage_extrabold</item>
+        <item name="fontFamily">@font/bricolage_extrabold</item>
+        <item name="android:textSize">@dimen/text_display</item>
+        <item name="lineHeight">44sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.Title" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/bricolage_bold</item>
+        <item name="fontFamily">@font/bricolage_bold</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="lineHeight">34sp</item>
+        <item name="android:letterSpacing">-0.015</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.Heading" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/jakarta_bold</item>
+        <item name="fontFamily">@font/jakarta_bold</item>
+        <item name="android:textSize">@dimen/text_heading</item>
+        <item name="lineHeight">26sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/jakarta_regular</item>
+        <item name="fontFamily">@font/jakarta_regular</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="lineHeight">24sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.BodyStrong" parent="TextAppearance.MandaChurras.Body">
+        <item name="android:fontFamily">@font/jakarta_semibold</item>
+        <item name="fontFamily">@font/jakarta_semibold</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@color/md_on_primary</item>
-        <item name="backgroundTint">@color/md_primary</item>
-        <item name="cornerRadius">16dp</item>
-        <item name="iconSize">20dp</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.Muted" parent="TextAppearance.MandaChurras.Body">
+        <item name="android:textColor">@color/ink_muted</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.Caption" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">@font/jakarta_medium</item>
+        <item name="fontFamily">@font/jakarta_medium</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="lineHeight">18sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textColor">@color/ink_muted</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.Overline" parent="TextAppearance.MandaChurras.Caption">
+        <item name="android:fontFamily">@font/jakarta_bold</item>
+        <item name="fontFamily">@font/jakarta_bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.05</item>
+    </style>
+    <style name="TextAppearance.MandaChurras.Caption.NavActive" parent="TextAppearance.MandaChurras.Caption">
+        <item name="android:fontFamily">@font/jakarta_bold</item>
+        <item name="fontFamily">@font/jakarta_bold</item>
     </style>
 
-    <style name="Churrasco.Button.Secondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
-        <item name="android:minHeight">48dp</item>
-        <item name="android:paddingStart">20dp</item>
-        <item name="android:paddingEnd">20dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@color/md_secondary</item>
-        <item name="backgroundTint">@color/md_surface</item>
-        <item name="cornerRadius">16dp</item>
-        <item name="strokeColor">@color/md_outline</item>
+    <!-- Texto sem estilo próprio cai em body. -->
+    <style name="Churrasco.TextView" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.Body</item>
+    </style>
+    <style name="Churrasco.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.Body</item>
+    </style>
+
+    <!-- Botões: pílula, texto em body-strong, sem caixa alta. -->
+    <style name="Churrasco.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:paddingStart">@dimen/space_24</item>
+        <item name="android:paddingEnd">@dimen/space_24</item>
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.BodyStrong</item>
+        <item name="android:textColor">@color/on_brasa</item>
+        <item name="backgroundTint">@color/button_primary_bg</item>
+        <item name="shapeAppearance">@style/Shape.MandaChurras.Pill</item>
+        <item name="iconSize">@dimen/icon_sm</item>
+        <item name="iconTint">@color/on_brasa</item>
+        <item name="iconGravity">textStart</item>
+    </style>
+    <style name="Churrasco.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/touch_min</item>
+        <item name="android:paddingStart">@dimen/space_24</item>
+        <item name="android:paddingEnd">@dimen/space_24</item>
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.BodyStrong</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="backgroundTint">@color/surface_raised</item>
+        <item name="strokeColor">@color/line_strong</item>
         <item name="strokeWidth">1dp</item>
+        <item name="shapeAppearance">@style/Shape.MandaChurras.Pill</item>
+        <item name="iconSize">@dimen/icon_sm</item>
+        <item name="iconTint">@color/ink</item>
+        <item name="iconGravity">textStart</item>
+    </style>
+    <style name="Churrasco.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">@dimen/touch_min</item>
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.BodyStrong</item>
+        <item name="android:textColor">@color/brasa</item>
+        <item name="shapeAppearance">@style/Shape.MandaChurras.Pill</item>
+        <item name="iconTint">@color/brasa</item>
     </style>
 
-    <style name="Churrasco.Button.Text" parent="Widget.MaterialComponents.Button.TextButton">
-        <item name="android:minHeight">48dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@color/md_secondary</item>
-        <item name="cornerRadius">16dp</item>
-    </style>
-
-    <style name="Churrasco.Card" parent="Widget.MaterialComponents.CardView">
-        <item name="cardBackgroundColor">@color/md_surface</item>
-        <item name="cardCornerRadius">24dp</item>
-        <item name="cardElevation">1dp</item>
-        <item name="strokeColor">@color/md_outline_variant</item>
+    <!-- Botão "Continuar com o Google": cores, logo e texto seguem as regras de marca do Google. -->
+    <style name="Churrasco.Button.Google" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.BodyStrong</item>
+        <item name="android:textColor">@color/google_button_text</item>
+        <item name="backgroundTint">@color/google_button_bg</item>
+        <item name="strokeColor">@color/google_button_stroke</item>
         <item name="strokeWidth">1dp</item>
+        <item name="shapeAppearance">@style/Shape.MandaChurras.Pill</item>
+        <item name="icon">@drawable/ic_google_g</item>
+        <item name="iconTint">@null</item>
+        <item name="iconSize">@dimen/icon_sm</item>
+        <item name="iconPadding">@dimen/space_12</item>
+        <item name="iconGravity">textStart</item>
     </style>
 
-    <style name="Churrasco.TextInput" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/md_primary</item>
-        <item name="hintTextColor">@color/md_primary</item>
-        <item name="boxCornerRadiusTopStart">16dp</item>
-        <item name="boxCornerRadiusTopEnd">16dp</item>
-        <item name="boxCornerRadiusBottomStart">16dp</item>
-        <item name="boxCornerRadiusBottomEnd">16dp</item>
+    <style name="Shape.MandaChurras.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+    <style name="Shape.MandaChurras.Medium" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_md</item>
+    </style>
+    <style name="Shape.MandaChurras.Large" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_lg</item>
+    </style>
+
+    <!-- Chip: surface-sunken em repouso; selecionado em brasa-soft com contorno brasa. -->
+    <style name="Churrasco.Chip" parent="Widget.Material3.Chip.Filter">
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.Caption</item>
+        <item name="android:textColor">@color/chip_text</item>
+        <item name="chipBackgroundColor">@color/chip_bg</item>
+        <item name="chipStrokeColor">@color/chip_stroke</item>
+        <item name="chipStrokeWidth">1.5dp</item>
+        <item name="chipMinHeight">40dp</item>
+        <item name="shapeAppearance">@style/Shape.MandaChurras.Pill</item>
+        <item name="checkedIconTint">@color/brasa_strong</item>
+        <item name="ensureMinTouchTargetSize">true</item>
+    </style>
+
+    <!-- Cartão: surface-raised, sem borda, sombra suave, cantos radius-md. -->
+    <style name="Churrasco.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">@color/surface_raised</item>
+        <item name="cardCornerRadius">@dimen/radius_md</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+        <item name="strokeWidth">0dp</item>
+    </style>
+
+    <!-- Campo: surface-sunken sem borda; foco com contorno de 2dp brasa. -->
+    <style name="Churrasco.TextInput" parent="Widget.Material3.TextInputLayout.FilledBox">
+        <item name="boxBackgroundColor">@color/surface_sunken</item>
+        <item name="boxStrokeColor">@color/brasa</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxCornerRadiusTopStart">@dimen/radius_md</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_md</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_md</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_md</item>
+        <item name="hintTextColor">@color/brasa_strong</item>
+        <item name="android:textColorHint">@color/ink_muted</item>
+        <item name="helperTextTextAppearance">@style/TextAppearance.MandaChurras.Caption</item>
+        <item name="errorTextAppearance">@style/TextAppearance.MandaChurras.Caption</item>
+        <item name="counterTextAppearance">@style/TextAppearance.MandaChurras.Caption</item>
+        <item name="startIconTint">@color/ink_muted</item>
+        <item name="endIconTint">@color/ink_muted</item>
+    </style>
+
+    <!-- Barra de baixo: Regular em repouso, Fill brasa sobre pílula brasa-soft no destino atual. -->
+    <style name="Churrasco.BottomNav" parent="Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">@color/surface_raised</item>
+        <item name="itemIconTint">@color/bottom_nav_item_color</item>
+        <item name="itemTextColor">@color/bottom_nav_text_color</item>
+        <item name="itemActiveIndicatorStyle">@style/Churrasco.BottomNav.Indicator</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.MandaChurras.Caption.NavActive</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.MandaChurras.Caption</item>
+        <item name="elevation">@dimen/card_elevation</item>
+    </style>
+    <style name="Churrasco.BottomNav.Indicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/brasa_soft</item>
+        <item name="android:width">56dp</item>
+        <item name="android:height">32dp</item>
+    </style>
+
+    <style name="Churrasco.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="titleTextAppearance">@style/TextAppearance.MandaChurras.Heading</item>
+        <item name="titleTextColor">@color/ink</item>
+        <item name="navigationIconTint">@color/ink</item>
+    </style>
+
+    <style name="ThemeOverlay.Churrasco.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurface">@color/surface_raised</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_raised</item>
+        <item name="shapeAppearanceOverlay">@style/Shape.MandaChurras.Large</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/Churrasco.Dialog.Title</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/Churrasco.Dialog.Body</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Churrasco.Button.Text</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Churrasco.Button.Text</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Churrasco.Button.Text</item>
+    </style>
+    <style name="Churrasco.Dialog.Title" parent="MaterialAlertDialog.Material3.Title.Text">
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.Heading</item>
+        <item name="android:textColor">@color/ink</item>
+    </style>
+    <style name="Churrasco.Dialog.Body" parent="MaterialAlertDialog.Material3.Body.Text">
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.Body</item>
+        <item name="android:textColor">@color/ink_muted</item>
+    </style>
+
+    <!-- Snackbar: ink com texto surface; ação em brasa-soft. -->
+    <style name="Churrasco.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="backgroundTint">@color/ink</item>
+        <item name="shapeAppearance">@style/Shape.MandaChurras.Medium</item>
+    </style>
+    <style name="Churrasco.Snackbar.Text" parent="Widget.Material3.Snackbar.TextView">
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.Body</item>
+        <item name="android:textColor">@color/surface</item>
+    </style>
+    <style name="Churrasco.Snackbar.Button" parent="Widget.Material3.Button.TextButton.Snackbar">
+        <item name="android:textColor">@color/brasa_soft</item>
+        <item name="android:textAppearance">@style/TextAppearance.MandaChurras.BodyStrong</item>
     </style>
 </resources>
