@@ -31,7 +31,8 @@ def page_down():
 
 def open_home():
     adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
-    wait_for(rid="btnActiveChurrascos", timeout=40)
+    wait_for(rid="nav_home", timeout=40)
+    wait_for(contains="Oi, Arthur", timeout=40)
     time.sleep(1.5)
 
 
@@ -95,25 +96,22 @@ def capture(theme):
     time.sleep(2)
 
     open_home(); snap(p + "03-inicio"); page_down(); snap(p + "03b-inicio-fim")
-    tap(wait_for(text="Ativos", timeout=10) or find(rid="nav_active")); wait_for(contains="Casa do Arthur", timeout=30); snap(p + "04-ativos")
-    tap(find(rid="nav_invites")); wait_for(contains="Sítio da Gabi", timeout=30); snap(p + "05-convites")
-    tap(find(rid="nav_history")); wait_for(contains="Aniversário", timeout=30); snap(p + "06-historico")
-
-    tap(find(rid="nav_invites")); tap(wait_for(contains="Sítio da Gabi", timeout=30))
+    tap(find(rid="nav_events")); wait_for(contains="Casa do Arthur", timeout=30); snap(p + "04-churrascos")
+    tap(wait_for(text="Passados", timeout=10)); wait_for(contains="Aniversário", timeout=30); snap(p + "06-passados")
+    tap(wait_for(text="Próximos", timeout=10)); tap(wait_for(contains="Sítio da Gabi", timeout=30))
     wait_for(contains="Você foi convidado", timeout=30); snap(p + "07-convite-detalhe")
     adb("shell", "input", "keyevent", "KEYCODE_BACK")
 
-    open_home(); tap(wait_for(rid="btnActiveChurrascos")); tap(wait_for(contains="Casa do Arthur", timeout=30))
+    open_home(); tap(find(rid="nav_events")); tap(wait_for(contains="Casa do Arthur", timeout=30))
     wait_for(contains="Churrasco de", timeout=40); time.sleep(3)
-    for i in range(9):
-        snap(p + f"08-detalhe-{i}")
-        before = " ".join(n.get("text") or "" for n in nodes(dump()))
-        page_down()
-        if " ".join(n.get("text") or "" for n in nodes(dump())) == before:
-            break
+    for i, name in enumerate(["Resumo", "Itens", "Contas", "Chat", "Mapa"]):
+        tap(wait_for(text=name, timeout=10)); time.sleep(2.5)
+        snap(p + f"08-aba-{i}-{name.lower()}")
+        if name in ("Resumo", "Itens"):
+            page_down(); snap(p + f"08-aba-{i}-{name.lower()}-fim"); to_top()
 
     if theme == "claro":
-        to_top()
+        tap(wait_for(text="Contas", timeout=10)); time.sleep(2)
         pix = scroll_to(text="Pagar com Pix", timeout=60)
         if pix is not None:
             tap(pix); wait_for(contains="Chave:", timeout=15); snap(p + "09-pix")
@@ -122,17 +120,15 @@ def capture(theme):
         tap(wait_for(text="Cancelar", timeout=10))
         time.sleep(1)
 
-    to_top(); tap(scroll_to(text="O que eu já garanto")); wait_for(contains="O que você vai levar?", timeout=30)
+    tap(wait_for(text="Resumo", timeout=10)); to_top(); tap(scroll_to(text="O que eu já garanto")); wait_for(contains="O que você vai levar?", timeout=30)
     snap(p + "11-itens-0"); page_down(); snap(p + "11-itens-1"); page_down(); snap(p + "11-itens-2"); page_down(); snap(p + "11-itens-3")
     adb("shell", "input", "keyevent", "KEYCODE_BACK")
 
     open_home(); tap(wait_for(rid="btnCreateChurrasco")); wait_for(contains="Novo churrasco", timeout=30)
     snap(p + "12-criar-0"); page_down(); snap(p + "12-criar-1")
     adb("shell", "input", "keyevent", "KEYCODE_BACK")
-    open_home(); tap(scroll_to(contains="Amigos")); wait_for(contains="Seus amigos", timeout=30); snap(p + "13-amigos"); page_down(); snap(p + "13b-amigos")
-    adb("shell", "input", "keyevent", "KEYCODE_BACK")
-    open_home(); tap(scroll_to(contains="Meu perfil")); wait_for(contains="Chave Pix", timeout=30); snap(p + "14-perfil")
-    adb("shell", "input", "keyevent", "KEYCODE_BACK")
+    open_home(); tap(wait_for(rid="nav_friends")); wait_for(contains="Seus amigos", timeout=30); snap(p + "13-amigos"); page_down(); snap(p + "13b-amigos")
+    tap(wait_for(rid="nav_profile")); wait_for(contains="Chave Pix", timeout=30); snap(p + "14-perfil")
 
 
 def main():

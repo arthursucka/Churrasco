@@ -1,18 +1,24 @@
 package com.longynus.churrasco.ui
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import androidx.annotation.DrawableRes
+import androidx.annotation.IdRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.longynus.churrasco.BottomNavHelper
 import com.longynus.churrasco.R
 import com.longynus.churrasco.TopBarHelper
 import com.longynus.churrasco.data.ApiError
@@ -25,9 +31,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 /**
- * Base das telas montadas com [Ui.kt]: barra superior, conteúdo rolável, barra de ação
- * na parte de baixo e os estados de carregando/sem conexão. As chamadas à API rodam em
- * corrotinas ligadas ao ciclo de vida, então não há callbacks soltos depois que a tela fecha.
+ * Base das telas montadas com [Ui.kt]: barra superior (ou a barra de baixo, nas quatro telas
+ * principais), conteúdo rolável, a ação fixa no rodapé e os estados de carregando/sem conexão.
+ * As chamadas à API rodam em corrotinas ligadas ao ciclo de vida, então não há callbacks
+ * soltos depois que a tela fecha.
  */
 abstract class ScreenActivity : AppCompatActivity() {
 
@@ -35,29 +42,63 @@ abstract class ScreenActivity : AppCompatActivity() {
     protected lateinit var content: LinearLayout
     protected lateinit var bottomBar: LinearLayout
     protected lateinit var scroll: ScrollView
+    protected lateinit var fab: ExtendedFloatingActionButton
     private lateinit var swipe: SwipeRefreshLayout
+    private lateinit var bottomNav: BottomNavigationView
 
-    protected fun setupScreen(title: String, onRefresh: (() -> Unit)? = null) {
+    /**
+     * Monta o esqueleto. Com [navItem], a tela é um dos quatro destinos da barra de baixo: sem
+     * barra superior nem voltar, e com a barra de baixo marcando [navItem].
+     */
+    protected fun setupScreen(title: String, onRefresh: (() -> Unit)? = null, @IdRes navItem: Int? = null) {
         setContentView(R.layout.activity_screen)
         root = findViewById(R.id.rootLayout)
         content = findViewById(R.id.content)
         bottomBar = findViewById(R.id.bottomBar)
         scroll = findViewById(R.id.scroll)
         swipe = findViewById(R.id.swipeRefresh)
-        TopBarHelper.setup(this, title)
-        // Android 15+ desenha atrás da barra de navegação: a coluna da tela (com a barra de
-        // ação de baixo) sobe a altura dela, ou a do teclado quando ele está aberto.
+        fab = findViewById(R.id.fab)
+        bottomNav = findViewById(R.id.bottomNavigation)
+        val toolbar = findViewById<View>(R.id.topToolbar)
+        if (navItem == null) {
+            TopBarHelper.setup(this, title)
+        } else {
+            toolbar.visibility = View.GONE
+            bottomNav.visibility = View.VISIBLE
+            BottomNavHelper.setup(this, bottomNav, navItem)
+            // Sem a barra superior, o conteúdo desce a altura da barra de status.
+            val baseTop = content.paddingTop
+            ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
+                view.setPadding(view.paddingLeft, baseTop + insets.getInsets(WindowInsetsCompat.Type.statusBars()).top, view.paddingRight, view.paddingBottom)
+                insets
+            }
+        }
+        // Android 15+ desenha atrás da barra de navegação: a coluna sobe a altura dela (ou a do
+        // teclado). Com a barra de baixo, ela mesma cuida da barra de navegação e some com o teclado.
+        @Suppress("DEPRECATION")
         window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         val column = bottomBar.parent as View
         ViewCompat.setOnApplyWindowInsetsListener(column) { view, insets ->
             val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, maxOf(nav, ime))
+            val keyboard = ime > nav
+            if (navItem != null) bottomNav.visibility = if (keyboard) View.GONE else View.VISIBLE
+            val bottom = if (navItem != null && !keyboard) 0 else maxOf(nav, ime)
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, bottom)
             insets
         }
         ViewCompat.requestApplyInsets(column)
+        // O botão flutuante fica acima da barra de baixo e da ação fixa.
+        column.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val above = (if (bottomNav.visibility == View.VISIBLE) bottomNav.height else 0) +
+                (if (bottomBar.visibility == View.VISIBLE) bottomBar.height else 0) + column.paddingBottom
+            val margin = above + dp(16)
+            if ((fab.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin != margin) {
+                fab.post { fab.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = margin } }
+            }
+        }
         swipe.isEnabled = onRefresh != null
-        swipe.setColorSchemeResources(R.color.mainPrimary)
+        swipe.setColorSchemeResources(R.color.brasa)
         swipe.setOnRefreshListener { onRefresh?.invoke() }
     }
 
@@ -65,12 +106,28 @@ abstract class ScreenActivity : AppCompatActivity() {
         findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.topToolbar).title = title
     }
 
+    /** Mostra o botão flutuante; ele recolhe para o redondo ao rolar para baixo. */
+    protected fun showFab(label: String, @DrawableRes icon: Int = R.drawable.ic_plus, @IdRes id: Int? = null, onClick: () -> Unit) {
+        fab.text = label
+        fab.setIconResource(icon)
+        fab.contentDescription = label
+        id?.let { fab.id = it }
+        fab.visibility = View.VISIBLE
+        fab.setOnClickListener { onClick() }
+        scroll.setOnScrollChangeListener { _, _, y, _, oldY -> if (y > oldY + 8) fab.shrink() else if (y < oldY - 8) fab.extend() }
+    }
+
     protected fun stopRefreshing() { swipe.isRefreshing = false }
 
-    /** Recria o conteúdo e a barra inferior. */
+    /** Recria o conteúdo e a ação fixa no rodapé. */
     protected fun render(bottom: (LinearLayout.() -> Unit)? = null, body: LinearLayout.() -> Unit) {
         content.removeAllViews()
         content.body()
+        setBottom(bottom)
+    }
+
+    /** Troca só a ação fixa no rodapé (null esconde). */
+    protected fun setBottom(bottom: (LinearLayout.() -> Unit)?) {
         bottomBar.removeAllViews()
         if (bottom != null) {
             bottomBar.bottom()
@@ -122,7 +179,7 @@ abstract class ScreenActivity : AppCompatActivity() {
             .setPositiveButton(action) { _, _ -> onConfirm() }
             .show()
             .also { dialog ->
-                if (danger) dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.mainDanger))
+                if (danger) dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.danger))
             }
     }
 }

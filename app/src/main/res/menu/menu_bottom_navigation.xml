@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Os quatro destinos fixos do Manda Churras. Fill no destino atual (seletores ic_nav_*). -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_home"
         android:icon="@drawable/ic_nav_house"
         android:title="@string/nav_home" />
     <item
-        android:id="@+id/nav_invites"
-        android:icon="@drawable/ic_nav_envelope_simple"
-        android:title="@string/nav_invites" />
-    <item
-        android:id="@+id/nav_active"
+        android:id="@+id/nav_events"
         android:icon="@drawable/ic_nav_fire"
-        android:title="@string/nav_active" />
+        android:title="@string/nav_events" />
     <item
-        android:id="@+id/nav_history"
-        android:icon="@drawable/ic_nav_clock_counter_clockwise"
-        android:title="@string/nav_history" />
+        android:id="@+id/nav_friends"
+        android:icon="@drawable/ic_nav_users_three"
+        android:title="@string/nav_friends" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_nav_user_circle"
+        android:title="@string/nav_profile" />
 </menu>

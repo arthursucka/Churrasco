@@ -65,13 +65,14 @@ def main():
 
     # 3. Dono entra com o nome antigo e vê o churrasco dele
     adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
+    tap(wait_for(rid="nav_profile", timeout=40))
     tap(scroll_to(rid="btnSwitchUser"))
     tap(wait_for(text="Sair"))
     wait_for(rid="btnSignIn", timeout=30)
     sign_in_in_app(owner)
     check("dono entra com o nome antigo", wait_for(contains="Oi, Antigo", timeout=60) is not None)
     check("revisão não aparece para quem não é admin", find(rid="btnReviewLegacyMain") is None)
-    tap(wait_for(rid="btnActiveChurrascos", timeout=30))
+    tap(wait_for(rid="nav_events", timeout=30))
     check("churrasco antigo volta para o dono", wait_for(contains="Churrasco antigo", timeout=40) is not None)
     shot("12-conta-recuperada")
 

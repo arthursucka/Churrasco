@@ -245,7 +245,11 @@ def type_into(rid, value):
 
 
 def tap_text(label, timeout=60, scroll=True):
-    node = scroll_to(text=label, timeout=timeout) if scroll else wait_for(text=label, timeout=timeout)
+    # Botões presos no rodapé (a ação fixa da tela do churrasco) não rolam: se já estão na
+    # tela, toca direto.
+    node = find(text=label)
+    if node is None:
+        node = scroll_to(text=label, timeout=timeout) if scroll else wait_for(text=label, timeout=timeout)
     tap(node)
 
 

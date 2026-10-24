@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -57,9 +58,10 @@ class EventDetailsViewModel : ViewModel() {
         refresh()
     }
 
-    fun refresh() {
-        val churrascoId = id ?: return
-        viewModelScope.launch {
+    /** Recarrega o churrasco; o Job termina quando a resposta chega (mudando ou não). */
+    fun refresh(): Job? {
+        val churrascoId = id ?: return null
+        return viewModelScope.launch {
             _loading.value = _event.value == null
             ChurrascoRepository.event(churrascoId)
                 .onSuccess { setEvent(it) }

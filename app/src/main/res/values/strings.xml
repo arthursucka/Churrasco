@@ -70,31 +70,12 @@
     <string name="login_generic">Não conseguimos entrar agora. Tente de novo.</string>
 
     <!-- Tela principal -->
-    <string name="main_title">Manda Churras</string>
     <string name="main_greeting">Oi, %1$s</string>
-    <string name="main_welcome_title">Vamos organizar o próximo churrasco?</string>
-    <string name="main_welcome_body">Crie o evento, convide pelo link ou pela sua lista de amigos e combine quem leva o quê.</string>
-    <string name="main_primary_action">Criar novo churrasco</string>
-    <string name="main_dashboard_title">Resumo rápido</string>
-    <string name="main_dashboard_body">Veja o que precisa da sua atenção agora.</string>
-    <string name="main_card_invites_title">Convites</string>
-    <string name="main_card_invites_body">Responda aos churrascos em que te chamaram.</string>
-    <string name="main_card_active_title">Ativos</string>
-    <string name="main_card_active_body">Acompanhe os churrascos que ainda vão acontecer.</string>
-    <string name="main_card_history_title">Histórico</string>
-    <string name="main_card_history_body">Consulte os churrascos que já passaram.</string>
-    <string name="main_card_open">Abrir</string>
-    <string name="main_section_account">Conta</string>
-    <string name="main_friends">Amigos</string>
-    <string name="main_profile">Meu perfil e chave Pix</string>
     <string name="trocar_usuario">Sair da conta</string>
     <string name="signout_title">Sair da conta?</string>
     <string name="signout_body">Você volta para a tela de entrada e deixa de receber notificações e lembretes neste celular. Seus churrascos continuam salvos.</string>
     <string name="signout_action">Sair</string>
     <string name="nav_home">Início</string>
-    <string name="nav_invites">Convites</string>
-    <string name="nav_active">Ativos</string>
-    <string name="nav_history">Histórico</string>
 
     <!-- Listas -->
     <string name="active_list_title">Churrascos ativos</string>
@@ -330,4 +311,58 @@
     <string name="legacy_reject_hint">Motivo da recusa</string>
     <string name="legacy_evidence_required">Registre como a identidade foi conferida.</string>
     <string name="legacy_rejection_required">Informe o motivo da recusa.</string>
+
+    <!-- 2.2: navegação, Início e Churrascos -->
+    <string name="nav_events">Churrascos</string>
+    <string name="nav_friends">Amigos</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="fab_new_event">Novo churrasco</string>
+    <string name="main_subtitle">Organize o churrasco sem confusão.</string>
+    <string name="hero_overline">Próximo churrasco</string>
+    <string name="countdown_today">É hoje, às %1$s</string>
+    <string name="countdown_tomorrow">É amanhã</string>
+    <plurals name="countdown_days">
+        <item quantity="one">Falta %1$d dia</item>
+        <item quantity="other">Faltam %1$d dias</item>
+    </plurals>
+    <string name="countdown_past">Foi em %1$s de %2$s</string>
+    <string name="hero_todo_items">Falta escolher o que você leva</string>
+    <string name="hero_todo_pay">Você deve %1$s a %2$s</string>
+    <plurals name="hero_todo_pending">
+        <item quantity="one">%1$d convidado ainda não respondeu</item>
+        <item quantity="other">%1$d convidados ainda não responderam</item>
+    </plurals>
+    <string name="hero_todo_none">Tudo certo. Agora é só aparecer.</string>
+    <string name="hero_action_items">Escolher itens</string>
+    <string name="hero_action_open">Ver o churrasco</string>
+    <string name="home_empty_title">Nenhum churrasco marcado</string>
+    <string name="home_empty_body">Marque o próximo e chame a galera pelo WhatsApp.</string>
+    <string name="home_empty_action">Marcar churrasco</string>
+    <string name="home_invites_title">Convites para responder</string>
+    <plurals name="home_invites_subtitle">
+        <item quantity="one">Te chamaram para %1$d churrasco.</item>
+        <item quantity="other">Te chamaram para %1$d churrascos.</item>
+    </plurals>
+    <string name="home_later_title">Também vem aí</string>
+    <string name="events_tab_upcoming">Próximos</string>
+    <string name="events_tab_past">Passados</string>
+    <string name="events_upcoming_title">Marcados</string>
+    <string name="events_past_empty_title">Nenhum churrasco ainda</string>
+    <string name="events_past_empty_body">Os churrascos que já aconteceram aparecem aqui.</string>
+    <string name="status_chip_organizer">Organizando</string>
+    <string name="status_chip_confirmed">Confirmado</string>
+    <string name="status_chip_invited">Responder</string>
+    <string name="status_chip_declined">Não vai</string>
+    <string name="card_invite_from">Convite de %1$s</string>
+    <plurals name="card_going">
+        <item quantity="one">%1$d confirmado</item>
+        <item quantity="other">%1$d confirmados</item>
+    </plurals>
+    <string name="tab_summary">Resumo</string>
+    <string name="tab_items">Itens</string>
+    <string name="tab_costs">Contas</string>
+    <string name="tab_chat">Chat</string>
+    <string name="tab_map">Mapa</string>
+    <string name="sticky_pay">Pagar %1$s</string>
+    <string name="sticky_call_friends">Chamar a galera</string>
 </resources>

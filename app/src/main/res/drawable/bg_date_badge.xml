@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selo de data: radius-sm; a cor vem do backgroundTint (brasa-soft ou surface-sunken). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@android:color/white" />
+    <corners android:radius="@dimen/radius_sm" />
+</shape>
