@@ -24,6 +24,7 @@ import com.longynus.churrasco.ui.ScreenActivity
 import com.longynus.churrasco.ui.TextRole
 import com.longynus.churrasco.ui.card
 import com.longynus.churrasco.ui.categoryBadge
+import com.longynus.churrasco.ui.celebrate
 import com.longynus.churrasco.ui.chips
 import com.longynus.churrasco.ui.dp
 import com.longynus.churrasco.ui.primaryButton
@@ -245,10 +246,17 @@ class ContributionsActivity : ScreenActivity() {
         if (vm.drafts.any { it.category.isOther && it.note.isBlank() }) return toast(getString(R.string.items_other_required))
         val inputs = vm.drafts.map { it.toInput() }
         val send = {
+            val firstTime = vm.event?.isMember != true
             call({ ChurrascoRepository.rsvp(id, "confirmed", inputs) }) {
-                toast(getString(if (inputs.isEmpty()) R.string.items_confirmed_empty else R.string.items_confirmed))
                 setResult(RESULT_OK)
-                finish()
+                if (firstTime) {
+                    // O pico do app: confirmar presença ganha a comemoração.
+                    celebrate(getString(R.string.items_confirmed), getString(R.string.celebrate_confirmed_body),
+                        getString(R.string.hero_action_open)) { finish() }
+                } else {
+                    toast(getString(if (inputs.isEmpty()) R.string.items_confirmed_empty else R.string.items_saved))
+                    finish()
+                }
             }
         }
         if (inputs.isEmpty() && vm.event?.isOrganizer != true) {

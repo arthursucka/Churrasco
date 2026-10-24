@@ -261,8 +261,13 @@ def dismiss_dialog():
             return
 
 
-def launch():
+def launch(skip_onboarding=True):
     adb("shell", "monkey", "-p", PKG, "-c", "android.intent.category.LAUNCHER", "1")
+    if skip_onboarding:
+        # Na primeira abertura vem a apresentação; os testes vão direto para a entrada.
+        skip = wait_for(text="Pular", timeout=15)
+        if skip is not None:
+            tap(skip)
 
 
 def install_fresh():

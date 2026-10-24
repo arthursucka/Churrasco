@@ -11,12 +11,13 @@ Tudo o que dá para preparar sem a conta de desenvolvedor já está no repositó
 | `targetSdk` 35 | `app/build.gradle.kts` |
 | Título, descrição curta e completa, novidades | `fastlane/metadata/android/pt-BR/` (dentro dos limites de 30/80/4000/500 caracteres) |
 | Política de privacidade | `docs/privacidade.html`, publicada em https://arthursucka.github.io/Churrasco/privacidade.html |
-| Capturas de tela | Geradas pelo teste de ponta a ponta em `e2e/shots/` (no CI, no artefato `e2e`) |
+| Capturas de tela | `fastlane/metadata/android/pt-BR/images/phoneScreenshots/` (6 telas emolduradas, 1080 × 1920). Para refazer: `e2e/tour.py` e o roteiro de molduras |
+| Arte de destaque | `fastlane/metadata/android/pt-BR/images/featureGraphic.png` (1024 × 500). Troque pela arte LOJA-01 quando ela for gerada |
 
 ## Passo a passo
 
 1. Crie a conta em https://play.google.com/console (US$ 25, pagamento único) e confirme a identidade.
-2. **Criar app** → nome "Churrasco com os amigos", idioma Português (Brasil), App, Gratuito.
+2. **Criar app** → nome "Manda Churras", idioma Português (Brasil), App, Gratuito.
 3. Em **Configurar o app**, preencha com as respostas abaixo.
 4. **Testes → Teste interno → Criar versão**: envie o `.aab` da última Release. A Play pede para ativar a **Assinatura de apps do Google Play**; aceite (a chave do CI vira a "chave de upload").
 5. Depois de ativar, copie em **Configuração → Integridade do app** o **SHA-1 e o SHA-256 da chave de assinatura do app** e cadastre no Firebase (Configurações do projeto → seu app Android → Adicionar impressão digital). Sem isso, o login com Google não funciona em quem instalar pela Play.
