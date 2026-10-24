@@ -6,7 +6,7 @@ Tudo o que dá para preparar sem a conta de desenvolvedor já está no repositó
 
 | Item | Onde |
 |---|---|
-| App Bundle (AAB) assinado | Anexo de cada Release (`churrasco-vX.Y.aab`), gerado pelo CI a cada tag `vX.Y` |
+| App Bundle (AAB) assinado | Anexo de cada Release (`manda-churras-vX.Y.aab`), gerado pelo CI a cada tag `vX.Y` |
 | `versionCode` crescente | Sai da tag: `v2.0` → 2000, `v2.1` → 2010, `v2.1.1` → 2011 |
 | `targetSdk` 35 | `app/build.gradle.kts` |
 | Título, descrição curta e completa, novidades | `fastlane/metadata/android/pt-BR/` (dentro dos limites de 30/80/4000/500 caracteres) |

@@ -55,22 +55,22 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           ./gradlew --no-daemon ${{ steps.version.outputs.args }} assembleRelease bundleRelease
-          cp app/build/outputs/apk/release/app-release.apk "churrasco-${GITHUB_REF_NAME}.apk"
-          cp app/build/outputs/bundle/release/app-release.aab "churrasco-${GITHUB_REF_NAME}.aab"
+          cp app/build/outputs/apk/release/app-release.apk "manda-churras-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "manda-churras-${GITHUB_REF_NAME}.aab"
 
       - name: Publicar Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "churrasco-${GITHUB_REF_NAME}.apk" "churrasco-${GITHUB_REF_NAME}.aab" \
-            --title "Churrasco $GITHUB_REF_NAME" --generate-notes --latest
+          gh release create "$GITHUB_REF_NAME" "manda-churras-${GITHUB_REF_NAME}.apk" "manda-churras-${GITHUB_REF_NAME}.aab" \
+            --title "Manda Churras $GITHUB_REF_NAME" --generate-notes --latest
 
       - name: Guardar APK de debug
         if: "!startsWith(github.ref, 'refs/tags/v')"
         uses: actions/upload-artifact@v4
         with:
-          name: churrasco-debug
+          name: manda-churras-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
