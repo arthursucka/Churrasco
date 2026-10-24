@@ -1,5 +1,6 @@
 package com.longynus.churrasco
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.os.Bundle
 import android.text.InputType
 import android.widget.LinearLayout
@@ -34,7 +35,7 @@ class LegacyLinkReviewActivity : ScreenActivity() {
         text(getString(R.string.legacy_review_accounts), TextRole.Title)
         text(getString(R.string.legacy_review_help), TextRole.Muted, top = 8)
         if (rows.isEmpty()) {
-            emptyState("✅", getString(R.string.legacy_review_empty), getString(R.string.legacy_review_empty_body), top = 24)
+            emptyState(R.drawable.ic_check_circle, getString(R.string.legacy_review_empty), getString(R.string.legacy_review_empty_body), top = 24)
         }
         rows.forEach { row ->
             card(top = 16) {
@@ -53,7 +54,7 @@ class LegacyLinkReviewActivity : ScreenActivity() {
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES,
             maxLength = 500,
         )
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(getString(if (approve) R.string.legacy_approve else R.string.legacy_reject))
             .setMessage("${row.username}\n${row.email}")
             .setView(form)

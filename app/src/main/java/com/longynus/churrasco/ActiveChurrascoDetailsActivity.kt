@@ -1,5 +1,6 @@
 package com.longynus.churrasco
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -42,10 +43,13 @@ import com.longynus.churrasco.reminders.ReminderScheduler
 import com.longynus.churrasco.ui.ScreenActivity
 import com.longynus.churrasco.ui.TextRole
 import com.longynus.churrasco.ui.Tone
+import com.longynus.churrasco.ui.avatar
 import com.longynus.churrasco.ui.banner
 import com.longynus.churrasco.ui.buttonRow
 import com.longynus.churrasco.ui.card
+import com.longynus.churrasco.ui.categoryBadge
 import com.longynus.churrasco.ui.dp
+import com.longynus.churrasco.ui.iconBadge
 import com.longynus.churrasco.ui.primaryButton
 import com.longynus.churrasco.ui.row
 import com.longynus.churrasco.ui.secondaryButton
@@ -123,7 +127,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         collect(vm.errors) { error ->
             stopRefreshing()
             if ((error as? ApiError)?.status == 404) {
-                AlertDialog.Builder(this).setMessage(R.string.details_not_found).setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
+                MaterialAlertDialogBuilder(this).setMessage(R.string.details_not_found).setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
             } else showError(error) { vm.refresh() }
         }
         collect(LocationShareService.state) { bindSharingState() }
@@ -169,7 +173,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                     addView(mapView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, context.dp(240)))
                 })
                 mapStatus = text("", TextRole.Caption, top = 12)
-                shareLocationButton = primaryButton(getString(R.string.map_share)) { toggleSharing() }
+                shareLocationButton = primaryButton(getString(R.string.map_share), icon = R.drawable.ic_navigation_arrow) { toggleSharing() }
             }
         }
 
@@ -179,7 +183,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                 messagesBox = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
                 addView(messagesBox)
                 val input = textField(getString(R.string.details_chat_hint), maxLength = 500, top = 16)
-                primaryButton(getString(R.string.cd_send_message)) {
+                primaryButton(getString(R.string.cd_send_message), icon = R.drawable.ic_paper_plane_right) {
                     val text = input.text.toString().trim()
                     if (text.isEmpty()) return@primaryButton
                     call({ ChurrascoRepository.sendMessage(churrascoId, text) }, silent = true) { input.text?.clear() }
@@ -209,7 +213,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
 
         if (intent.getBooleanExtra(EXTRA_JUST_CREATED, false) && !askedToShare) {
             askedToShare = true
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.created_title)
                 .setMessage(R.string.created_body)
                 .setNegativeButton(R.string.later, null)
@@ -224,12 +228,12 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         removeAllViews()
         text(getString(R.string.details_heading, event.organizer.displayName), TextRole.Title)
         card(top = 16) {
-            row("📅", whenText(event), getString(R.string.details_timezone), top = 0)
-            row("📍", event.local, event.address.ifBlank { null })
+            row(context.iconBadge(R.drawable.ic_calendar_blank), whenText(event), getString(R.string.details_timezone), top = 0)
+            row(context.iconBadge(R.drawable.ic_map_pin), event.local, event.address.ifBlank { null })
             val query = event.address.ifBlank { event.local }
             buttonRow(top = 16) {
-                secondaryButton(getString(R.string.details_open_maps), top = 0) { openMaps(query) }
-                secondaryButton(getString(R.string.details_open_waze), top = 0) { openWaze(query) }
+                secondaryButton(getString(R.string.details_open_maps), top = 0, icon = R.drawable.ic_map_trifold) { openMaps(query) }
+                secondaryButton(getString(R.string.details_open_waze), top = 0, icon = R.drawable.ic_car) { openWaze(query) }
             }
         }
     }
@@ -248,7 +252,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                 secondaryButton(getString(R.string.status_change_items)) { openContributions() }
                 textButton(getString(R.string.status_cancel_presence), danger = true) { decline(event) }
             }
-            "organizer" -> banner(getString(R.string.status_organizer_title), getString(R.string.status_organizer_body), Tone.Info, top = 16).apply {
+            "organizer" -> banner(getString(R.string.status_organizer_title), getString(R.string.status_organizer_body), Tone.Brand, top = 16).apply {
                 secondaryButton(getString(R.string.status_organizer_items)) { openContributions() }
             }
             else -> banner(getString(R.string.status_admin_title), null, Tone.Info, top = 16)
@@ -259,7 +263,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         removeAllViews()
         if (!event.isMember && !event.canEdit) return@apply
         card(top = 16) {
-            if (event.isMember) primaryButton(getString(R.string.invite_share_action), top = 0) { shareInvite(event) }
+            if (event.isMember) primaryButton(getString(R.string.invite_share_action), top = 0, icon = R.drawable.ic_share_network) { shareInvite(event) }
             if (event.canEdit) {
                 secondaryButton(getString(R.string.details_edit), top = if (event.isMember) 8 else 0) {
                     refreshOnReturn.launch(Intent(this@ActiveChurrascoDetailsActivity, EventFormActivity::class.java).putExtra(EventFormActivity.EXTRA_ID, event.id))
@@ -274,10 +278,10 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         val going = 1 + event.confirmed.size
         section(getString(R.string.people_title, going), getString(R.string.people_subtitle, event.pending.size, event.declined.size))
         card(top = 12) {
-            row("👑", event.organizer.displayName, getString(R.string.people_organizer), top = 0)
-            event.confirmed.forEach { row("✅", it.displayName, getString(R.string.people_confirmed)) }
-            event.pending.forEach { row("⏳", it.displayName, getString(R.string.people_pending)) }
-            event.declined.forEach { row("🙅", it.displayName, getString(R.string.people_declined)) }
+            row(context.avatar(event.organizer.displayName, event.organizer.uid), event.organizer.displayName, getString(R.string.people_organizer), top = 0)
+            event.confirmed.forEach { row(context.avatar(it.displayName, it.uid), it.displayName, getString(R.string.people_confirmed)) }
+            event.pending.forEach { row(context.avatar(it.displayName, it.uid), it.displayName, getString(R.string.people_pending)) }
+            event.declined.forEach { row(context.avatar(it.displayName, it.uid), it.displayName, getString(R.string.people_declined)) }
         }
     }
 
@@ -294,10 +298,10 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
             .toSortedMap(compareBy { name -> ItemCatalog.categories.indexOfFirst { it.name == name }.let { if (it < 0) Int.MAX_VALUE else it } })
             .forEach { (category, list) ->
                 card(top = 12) {
-                    text("${ItemCatalog.emoji(category)}  ${ItemCatalog.label(category)}", TextRole.Section)
+                    row(context.categoryBadge(ItemCatalog.find(category), 48), ItemCatalog.label(category), top = 0)
                     list.forEach { c ->
                         val label = ItemCatalog.summary(c).ifBlank { if (ItemCatalog.find(c.category)?.name != c.category) c.category else getString(R.string.items_no_details) }
-                        row(c.displayName.take(1).uppercase(), c.displayName, label, top = 12)
+                        row(context.avatar(c.displayName, c.uid, 32), c.displayName, label, top = 12)
                     }
                 }
             }
@@ -314,7 +318,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                 if (balance == null || balance.totalCents == 0L) {
                     text(getString(R.string.costs_empty), TextRole.Muted)
                 } else {
-                    text(Money.format(balance.totalCents), TextRole.Title)
+                    text(Money.format(balance.totalCents), TextRole.Display)
                     text(getString(R.string.costs_total, balance.members, Money.format(balance.shareCents)), TextRole.Caption, top = 4)
                     val mine = balance.transfers.filter { it.from.uid == myUid }
                     val toMe = balance.transfers.filter { it.to.uid == myUid }
@@ -326,7 +330,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                     val others = balance.transfers.filter { it.from.uid != myUid && it.to.uid != myUid }
                     if (others.isNotEmpty()) {
                         text(getString(R.string.costs_others), TextRole.Caption, top = 16)
-                        others.forEach { row("💸", "${it.from.displayName} → ${it.to.displayName}", null, Money.format(it.amountCents), top = 8) }
+                        others.forEach { row(context.avatar(it.from.displayName, it.from.uid, 32), "${it.from.displayName} → ${it.to.displayName}", null, Money.format(it.amountCents), top = 8) }
                     }
                 }
                 primaryButton(getString(R.string.costs_add)) { addExpense() }
@@ -336,7 +340,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                     text(getString(R.string.costs_expenses_title), TextRole.Strong)
                     event.expenses.forEach { expense ->
                         val canDelete = expense.uid == myUid || event.canEdit
-                        row("🧾", expense.description, expense.displayName, Money.format(expense.amountCents), top = 12,
+                        row(context.avatar(expense.displayName, expense.uid, 32), expense.description, expense.displayName, Money.format(expense.amountCents), top = 12,
                             onClick = if (canDelete) ({ removeExpense(expense.id, expense.description) }) else null)
                     }
                     text(getString(R.string.costs_delete_hint), TextRole.Caption, top = 8)
@@ -352,7 +356,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
             if (key.isNullOrBlank()) {
                 text(getString(R.string.costs_no_pix_key, transfer.to.displayName), TextRole.Caption, top = 4)
             } else {
-                secondaryButton(getString(R.string.costs_pay_pix)) { showPix(transfer, key) }
+                primaryButton(getString(R.string.costs_pay_pix), icon = R.drawable.ic_pix_logo) { showPix(transfer, key) }
             }
         } else {
             text(getString(R.string.costs_owes_you, transfer.from.displayName, Money.format(transfer.amountCents)), TextRole.Strong, top = 16)
@@ -373,7 +377,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
             keyListener = android.text.method.DigitsKeyListener.getInstance("0123456789,.")
             setRawInputType(InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL)
         }
-        val dialog = AlertDialog.Builder(this).setTitle(R.string.costs_add).setView(form)
+        val dialog = MaterialAlertDialogBuilder(this).setTitle(R.string.costs_add).setView(form)
             .setNegativeButton(R.string.cancel, null).setPositiveButton(R.string.save, null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
@@ -407,7 +411,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
             text(getString(R.string.pix_to, transfer.to.displayName, Money.format(transfer.amountCents)), TextRole.Strong, top = 16).gravity = Gravity.CENTER
             text(getString(R.string.pix_key, key), TextRole.Caption, top = 4).gravity = Gravity.CENTER
         }
-        AlertDialog.Builder(this).setTitle(R.string.pix_title).setView(view)
+        MaterialAlertDialogBuilder(this).setTitle(R.string.pix_title).setView(view)
             .setNegativeButton(R.string.close, null)
             .setPositiveButton(R.string.pix_copy) { _, _ ->
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Pix", code))
@@ -578,5 +582,5 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
     }
 
     private fun showMessage(message: String) =
-        AlertDialog.Builder(this).setMessage(message).setPositiveButton(R.string.ok, null).show()
+        MaterialAlertDialogBuilder(this).setMessage(message).setPositiveButton(R.string.ok, null).show()
 }

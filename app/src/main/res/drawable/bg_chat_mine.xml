@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Minha mensagem: brasa, ponta embaixo à direita. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/md_primary" />
-    <corners
-        android:bottomLeftRadius="18dp"
-        android:bottomRightRadius="6dp"
-        android:topLeftRadius="18dp"
-        android:topRightRadius="18dp" />
+    <solid android:color="@color/brasa" />
+    <corners android:bottomLeftRadius="@dimen/radius_md" android:bottomRightRadius="4dp" android:topLeftRadius="@dimen/radius_md" android:topRightRadius="@dimen/radius_md" />
 </shape>

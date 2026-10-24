@@ -1,23 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Churrasco" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/md_primary</item>
-        <item name="colorOnPrimary">@color/md_on_primary</item>
-        <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
-        <item name="colorSecondary">@color/md_secondary</item>
-        <item name="colorOnSecondary">@color/md_on_secondary</item>
-        <item name="colorSurface">@color/md_surface</item>
-        <item name="colorOnSurface">@color/md_on_surface</item>
-        <item name="colorError">@color/error</item>
-        <item name="android:colorAccent">@color/md_tertiary</item>
-        <item name="android:fontFamily">sans</item>
-        <item name="android:windowBackground">@color/md_background</item>
-        <item name="android:textColorPrimary">@color/md_on_background</item>
-        <item name="android:textColorSecondary">@color/md_on_surface_variant</item>
-        <item name="android:statusBarColor">@color/md_background</item>
-        <item name="android:navigationBarColor">@color/md_background</item>
-        <item name="android:windowLightStatusBar">true</item>
+    <!-- Tema base do Manda Churras (Material 3). As variantes por versão e por tema só mudam as barras do sistema e a abertura. -->
+    <style name="Base.Theme.Churrasco" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brasa</item>
+        <item name="colorOnPrimary">@color/on_brasa</item>
+        <item name="colorPrimaryContainer">@color/brasa_soft</item>
+        <item name="colorOnPrimaryContainer">@color/brasa_strong</item>
+        <item name="colorSecondary">@color/ink</item>
+        <item name="colorOnSecondary">@color/surface_raised</item>
+        <item name="colorSecondaryContainer">@color/brasa_soft</item>
+        <item name="colorOnSecondaryContainer">@color/brasa_strong</item>
+        <item name="colorTertiary">@color/ouro</item>
+        <item name="colorOnTertiary">@color/on_ouro</item>
+        <item name="colorError">@color/danger</item>
+        <item name="colorErrorContainer">@color/danger_soft</item>
+        <item name="android:colorBackground">@color/surface</item>
+        <item name="colorOnBackground">@color/ink</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/ink</item>
+        <item name="colorOnSurfaceVariant">@color/ink_muted</item>
+        <item name="colorSurfaceContainerLowest">@color/surface_raised</item>
+        <item name="colorSurfaceContainerLow">@color/surface_raised</item>
+        <item name="colorSurfaceContainer">@color/surface_raised</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_raised</item>
+        <item name="colorSurfaceContainerHighest">@color/surface_sunken</item>
+        <item name="colorOutline">@color/line_strong</item>
+        <item name="colorOutlineVariant">@color/line</item>
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="android:textColorPrimary">@color/ink</item>
+        <item name="android:textColorSecondary">@color/ink_muted</item>
+        <!-- A fonte vem dos estilos de texto, nunca do tema: no tema ela passaria por cima deles. -->
+        <item name="android:textViewStyle">@style/Churrasco.TextView</item>
+        <item name="editTextStyle">@style/Churrasco.EditText</item>
+        <item name="android:statusBarColor">@color/surface</item>
+        <item name="android:navigationBarColor">@color/surface</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.MandaChurras.Title</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.MandaChurras.Title</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.MandaChurras.Heading</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.MandaChurras.Body</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.MandaChurras.Body</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.MandaChurras.Caption</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.MandaChurras.BodyStrong</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.MandaChurras.Caption</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.MandaChurras.Caption</item>
         <item name="textInputStyle">@style/Churrasco.TextInput</item>
         <item name="materialButtonStyle">@style/Churrasco.Button.Primary</item>
+        <item name="materialButtonOutlinedStyle">@style/Churrasco.Button.Secondary</item>
+        <item name="borderlessButtonStyle">@style/Churrasco.Button.Text</item>
+        <item name="chipStyle">@style/Churrasco.Chip</item>
+        <item name="materialCardViewStyle">@style/Churrasco.Card</item>
+        <item name="bottomNavigationStyle">@style/Churrasco.BottomNav</item>
+        <item name="toolbarStyle">@style/Churrasco.Toolbar</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Churrasco.Dialog</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.Churrasco.Dialog</item>
+        <item name="snackbarStyle">@style/Churrasco.Snackbar</item>
+        <item name="snackbarTextViewStyle">@style/Churrasco.Snackbar.Text</item>
+        <item name="snackbarButtonStyle">@style/Churrasco.Snackbar.Button</item>
+    </style>
+
+    <style name="Theme.Churrasco" parent="Base.Theme.Churrasco">
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

@@ -133,7 +133,7 @@ def main():
 
     # 8. Localização continua com a tela bloqueada
     adb("emu", "geo", "fix", "-46.6333", "-23.5505", check=False)
-    tap(scroll_to(text="📍 Estou a caminho"))
+    tap(scroll_to(text="Estou a caminho"))
     time.sleep(8)
     first = (db_get(f"churrascos/{eid}/locations") or {}).get(org_uid, {})
     check("localização enviada pelo serviço", "latitude" in first, str(first))
@@ -169,7 +169,7 @@ def main():
     check("edição salva o novo local", event(eid, org_token)["local"] == "Sitio do teste", screen_text()[:300])
 
     # 10. Link de convite
-    tap_text("📤 Convidar com link")
+    tap_text("Convidar com link")
     time.sleep(3)
     focus = adb("shell", "dumpsys", "window", "displays")
     check("abre a lista de apps para compartilhar", "intentresolver" in focus or "ChooserActivity" in focus or "ResolverActivity" in focus)

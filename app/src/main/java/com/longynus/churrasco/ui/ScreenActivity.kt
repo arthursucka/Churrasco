@@ -1,5 +1,6 @@
 package com.longynus.churrasco.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
@@ -108,13 +109,13 @@ abstract class ScreenActivity : AppCompatActivity() {
             return
         }
         val message = api?.serverMessage ?: getString(if (api?.isNetwork == true) R.string.error_network else R.string.error_generic)
-        AlertDialog.Builder(this).setTitle(R.string.error_title).setMessage(message).setPositiveButton(R.string.ok, null).show()
+        MaterialAlertDialogBuilder(this).setTitle(R.string.error_title).setMessage(message).setPositiveButton(R.string.ok, null).show()
     }
 
     protected fun toast(message: String) = root.showSnackbar(message)
 
     protected fun confirm(title: String, message: String, action: String, danger: Boolean = false, onConfirm: () -> Unit) {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(title)
             .setMessage(message)
             .setNegativeButton(R.string.cancel, null)

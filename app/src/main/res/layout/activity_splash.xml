@@ -15,21 +15,20 @@
 
         <ImageView
             android:id="@+id/imgSplashLogo"
-            android:layout_width="96dp"
+            android:layout_width="78dp"
             android:layout_height="96dp"
-            android:contentDescription="@string/app_name"
+            android:contentDescription="@null"
             android:scaleType="fitCenter"
-            android:src="@drawable/splash_symbol" />
+            android:src="@drawable/brand_symbol_light" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:fontFamily="sans"
-            android:text="@string/app_name"
-            android:textColor="@color/white"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_16"
+            android:contentDescription="@string/app_name"
+            android:text="@string/brand_wordmark"
+            android:textAppearance="@style/TextAppearance.MandaChurras.Title"
+            android:textColor="@color/on_carvao" />
 
     </LinearLayout>
 

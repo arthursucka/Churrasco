@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Camada monocromática do ícone temático (Android 13+). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:scaleX="0.03871" android:scaleY="0.03871" android:translateX="16.606" android:translateY="16.645">
+        <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+            android:pathData="M566,591 H1366 A180,180 0 0 1 1546,771 V1268 A180,180 0 0 1 1366,1448 H880 L686,1666 Q640,1716 604,1680 Q593,1668 593,1640 V1448 H566 A180,180 0 0 1 386,1268 V771 A180,180 0 0 1 566,591 Z M884,1296 C800,1265 724,1190 724,1100 C724,960 860,900 905,830 C925,800 930,775 932,760 C934,738 955,733 970,746 C1030,795 1075,860 1072,945 C1070,965 1095,968 1100,950 C1105,925 1105,905 1115,898 C1122,892 1132,898 1136,905 C1180,965 1207,1035 1207,1100 C1207,1190 1140,1265 1050,1300 C1040,1295 1042,1286 1048,1282 C1080,1258 1095,1225 1095,1195 C1095,1100 990,1060 985,1020 C983,1005 975,998 966,998 C950,998 900,1050 870,1095 C840,1140 836,1175 836,1205 C836,1245 855,1268 885,1287 Z" />
+        <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+            android:pathData="M966,240 Q996,355 1111,385 Q996,415 966,530 Q936,415 821,385 Q936,355 966,240 Z" />
+    </group>
+</vector>

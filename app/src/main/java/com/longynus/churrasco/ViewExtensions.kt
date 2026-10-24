@@ -1,6 +1,7 @@
 package com.longynus.churrasco
 
-import android.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.appcompat.app.AlertDialog
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -38,7 +39,7 @@ fun View.hideConnectionState() {
  * Exibe um diálogo de erro com o [message] fornecido.
  */
 fun View.showErrorDialog(message: String) {
-    AlertDialog.Builder(this.context)
+    MaterialAlertDialogBuilder(this.context)
         .setTitle("Ops")
         .setMessage(message)
         .setPositiveButton("OK", null)

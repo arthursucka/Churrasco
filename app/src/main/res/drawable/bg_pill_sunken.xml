@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pílula surface-sunken: contador de quantidade. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/surface_sunken" />
+    <corners android:radius="@dimen/touch_min" />
+</shape>

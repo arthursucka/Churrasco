@@ -1,5 +1,6 @@
 package com.longynus.churrasco
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -68,7 +69,7 @@ abstract class EventListActivity(
                 if (api?.isNetwork == true) {
                     root.showConnectionState(getString(R.string.error_network_retry)) { load() }
                 } else {
-                    AlertDialog.Builder(this@EventListActivity)
+                    MaterialAlertDialogBuilder(this@EventListActivity)
                         .setMessage(api?.serverMessage ?: getString(R.string.error_generic))
                         .setPositiveButton(R.string.ok, null).show()
                 }

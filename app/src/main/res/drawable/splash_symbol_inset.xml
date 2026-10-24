@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone da abertura do Android 12+: o símbolo claro dentro da área visível de 160 dp. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:width="96dp"
+        android:width="78dp"
         android:height="96dp"
-        android:drawable="@drawable/splash_symbol"
+        android:drawable="@drawable/brand_symbol_light"
         android:gravity="center" />
 </layer-list>
