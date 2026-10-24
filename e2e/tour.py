@@ -114,7 +114,7 @@ def capture(theme):
         tap(wait_for(text="Contas", timeout=10)); time.sleep(2)
         pix = scroll_to(text="Pagar com Pix", timeout=60)
         if pix is not None:
-            tap(pix); wait_for(contains="Chave:", timeout=15); snap(p + "09-pix")
+            tap(pix); wait_for(contains="Chave:", timeout=15); time.sleep(1); snap(p + "09-pix")
             tap(wait_for(text="Fechar", timeout=10))
         tap(scroll_to(text="Lançar despesa")); wait_for(text="Salvar", timeout=15); snap(p + "10-despesa")
         tap(wait_for(text="Cancelar", timeout=10))
@@ -135,7 +135,10 @@ def main():
     seed()
     install_fresh()
     adb("shell", "cmd", "uimode", "night", "no")
-    launch(); time.sleep(0.6); snap("claro-01-splash")
+    launch(skip_onboarding=False); time.sleep(0.6); snap("claro-01-splash")
+    for i in range(3):
+        wait_for(text="Pular", timeout=30); time.sleep(0.8); snap(f"claro-01-apresentacao-{i + 1}")
+        tap(wait_for(text="Começar" if i == 2 else "Próximo", timeout=10))
     wait_for(rid="btnCreateAccount", timeout=40); snap("claro-02-login")
     adb("shell", "cmd", "uimode", "night", "yes"); time.sleep(2); snap("escuro-02-login")
     adb("shell", "cmd", "uimode", "night", "no"); time.sleep(2)

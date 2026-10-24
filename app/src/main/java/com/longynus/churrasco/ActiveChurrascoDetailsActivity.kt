@@ -414,6 +414,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                     when {
                         mine.isNotEmpty() -> mine.forEach { transferRow(it, payer = true) }
                         toMe.isNotEmpty() -> toMe.forEach { transferRow(it, payer = false) }
+                        balance.transfers.isEmpty() -> banner(getString(R.string.costs_closed_title), getString(R.string.costs_closed_body), Tone.Success, top = 16)
                         else -> text(getString(R.string.costs_you_are_even), TextRole.Strong, top = 16)
                     }
                     val others = balance.transfers.filter { it.from.uid != myUid && it.to.uid != myUid }
@@ -490,22 +491,33 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
             call({ ChurrascoRepository.removeExpense(churrascoId, expenseId) }) { vm.apply(it) }
         }
 
+    /** Pix numa folha de baixo: o valor grande, para quem, o QR e o "copia e cola". */
     private fun showPix(transfer: Transfer, key: String) {
         val code = PixPayload.build(key, transfer.to.displayName, transfer.amountCents, txid = "CHURRASCO")
+        val sheet = com.google.android.material.bottomsheet.BottomSheetDialog(this)
         val view = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(24), dp(16), dp(24), 0)
-            addView(ImageView(context).apply { setImageBitmap(qr(code, dp(240))) }, LinearLayout.LayoutParams(dp(240), dp(240)))
-            text(getString(R.string.pix_to, transfer.to.displayName, Money.format(transfer.amountCents)), TextRole.Strong, top = 16).gravity = Gravity.CENTER
-            text(getString(R.string.pix_key, key), TextRole.Caption, top = 4).gravity = Gravity.CENTER
-        }
-        MaterialAlertDialogBuilder(this).setTitle(R.string.pix_title).setView(view)
-            .setNegativeButton(R.string.close, null)
-            .setPositiveButton(R.string.pix_copy) { _, _ ->
+            setPadding(dp(24), dp(8), dp(24), dp(24))
+            text(getString(R.string.pix_title), TextRole.Section).gravity = Gravity.CENTER
+            text(Money.format(transfer.amountCents), TextRole.Display, top = 16).gravity = Gravity.CENTER
+            text(getString(R.string.pix_to_name, transfer.to.displayName), TextRole.Muted, top = 4).gravity = Gravity.CENTER
+            addView(ImageView(context).apply { setImageBitmap(qr(code, dp(200))) }, LinearLayout.LayoutParams(dp(200), dp(200)).apply { topMargin = dp(24) })
+            text(getString(R.string.pix_key, key), TextRole.Caption, top = 12).gravity = Gravity.CENTER
+            lateinit var copy: com.google.android.material.button.MaterialButton
+            copy = primaryButton(getString(R.string.pix_copy), top = 24, icon = R.drawable.ic_copy) {
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Pix", code))
-                toast(getString(R.string.pix_copied))
-            }.show()
+                // O ícone vira um "ok" por um instante; depois a folha fecha com o aviso.
+                copy.setIconResource(R.drawable.ic_check_circle)
+                copy.text = getString(R.string.pix_copied_short)
+                copy.postDelayed({ sheet.dismiss(); toast(getString(R.string.pix_copied)) }, 900)
+            }
+            textButton(getString(R.string.close), top = 4) { sheet.dismiss() }
+        }
+        sheet.setContentView(view)
+        sheet.behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+        sheet.behavior.skipCollapsed = true
+        sheet.show()
     }
 
     private fun qr(content: String, size: Int): Bitmap {
@@ -656,7 +668,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
     }
 
     private fun shareInvite(event: Event) = call({ ChurrascoRepository.inviteLink(churrascoId) }) { link ->
-        InviteLinkActivity.share(this, link.url, event.local, whenText(event))
+        InviteLinkActivity.share(this, link.url, event.local, event.whenLine(), event.address, event.organizer.displayName)
     }
 
     private fun openMaps(query: String) {

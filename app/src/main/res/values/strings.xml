@@ -258,7 +258,8 @@
     <string name="costs_remove_title">Apagar esta despesa?</string>
     <string name="costs_remove_action">Apagar</string>
     <string name="pix_title">Pagar com Pix</string>
-    <string name="pix_to">%2$s para %1$s</string>
+    <string name="pix_to_name">para %1$s</string>
+    <string name="pix_copied_short">Copiado</string>
     <string name="pix_key">Chave: %1$s</string>
     <string name="pix_copy">Copiar código</string>
     <string name="pix_copied">Código copiado. Cole no app do seu banco em \"Pix copia e cola\".</string>
@@ -365,4 +366,22 @@
     <string name="tab_map">Mapa</string>
     <string name="sticky_pay">Pagar %1$s</string>
     <string name="sticky_call_friends">Chamar a galera</string>
+
+    <!-- 2.3: comemoração, convite em imagem e apresentação -->
+    <string name="items_saved">Itens salvos.</string>
+    <string name="celebrate_confirmed_body">Já avisamos quem organiza. Agora é só aparecer com o que você escolheu.</string>
+    <string name="costs_closed_title">Contas fechadas!</string>
+    <string name="costs_closed_body">Ninguém deve nada a ninguém neste churrasco.</string>
+    <string name="invite_card_overline">%1$s te chamou</string>
+    <string name="invite_card_footer">Confirme e diga o que vai levar no Manda Churras.</string>
+    <string name="onb_skip">Pular</string>
+    <string name="onb_next">Próximo</string>
+    <string name="onb_start">Começar</string>
+    <string name="onb_page">Página %1$d de %2$d</string>
+    <string name="onb_1_title">Marque e chame a galera</string>
+    <string name="onb_1_body">Crie o churrasco e mande o convite pelo WhatsApp em segundos.</string>
+    <string name="onb_2_title">Cada um leva uma coisa</string>
+    <string name="onb_2_body">Escolha o que vai levar e veja o que os outros já garantiram.</string>
+    <string name="onb_3_title">Conta dividida sem climão</string>
+    <string name="onb_3_body">Lance o que gastou: o app divide e mostra o Pix de cada um.</string>
 </resources>

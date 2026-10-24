@@ -27,7 +27,9 @@ class SplashActivity : AppCompatActivity() {
         logo.animate().scaleX(1f).scaleY(1f).setDuration(420).start()
 
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, LoginActivity::class.java))
+            // Primeira abertura, sem ninguém logado: a apresentação vem antes da entrada.
+            val first = !OnboardingActivity.seen(this) && !AuthSession.isReady(this)
+            startActivity(Intent(this, if (first) OnboardingActivity::class.java else LoginActivity::class.java))
             finish()
         }, 720)
     }

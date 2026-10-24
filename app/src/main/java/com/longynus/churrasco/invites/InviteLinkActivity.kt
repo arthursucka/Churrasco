@@ -31,15 +31,21 @@ class InviteLinkActivity : ScreenActivity() {
         }
 
         /** Abre a lista de apps do Android (WhatsApp, e-mail...) com o convite. */
-        fun share(activity: Activity, url: String, place: String, whenText: String) {
+        /**
+         * Compartilha o convite: a imagem do cartão (InviteCard) com o texto e o link. Se a
+         * imagem não puder ser gerada, vai só o texto, como antes.
+         */
+        fun share(activity: Activity, url: String, place: String, whenText: String, address: String = "", host: String = "") {
             val text = activity.getString(R.string.invite_share_text, whenText, place, url)
-            activity.startActivity(
-                Intent.createChooser(
-                    Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-                        .putExtra(Intent.EXTRA_SUBJECT, activity.getString(R.string.invite_share_subject)),
-                    activity.getString(R.string.invite_share_title),
-                )
-            )
+            val image = runCatching { InviteCard.save(activity, InviteCard.render(activity, place, whenText, address, host)) }.getOrNull()
+            val send = Intent(Intent.ACTION_SEND)
+                .putExtra(Intent.EXTRA_TEXT, text)
+                .putExtra(Intent.EXTRA_SUBJECT, activity.getString(R.string.invite_share_subject))
+            if (image != null) {
+                send.setType("image/png").putExtra(Intent.EXTRA_STREAM, image).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                send.clipData = android.content.ClipData.newRawUri(null, image)
+            } else send.setType("text/plain")
+            activity.startActivity(Intent.createChooser(send, activity.getString(R.string.invite_share_title)))
         }
     }
 

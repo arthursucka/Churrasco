@@ -115,5 +115,19 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorPrimary" />
+        <!-- Entrega a imagem do convite ao WhatsApp e afins (só a pasta de cache "share"). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.share"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/share_paths" />
+        </provider>
+
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false" />
     </application>
 </manifest>
