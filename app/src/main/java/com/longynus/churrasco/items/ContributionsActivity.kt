@@ -144,7 +144,7 @@ class ContributionsActivity : ScreenActivity() {
         })
         header.textButton(getString(R.string.items_remove), top = 0, danger = true) {
             vm.drafts.remove(draft); draw()
-        }
+        }.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
 
         if (draft.category.isOther) {
             textField(getString(R.string.items_other_hint), draft.note, maxLength = 200).watch { draft.note = it }
