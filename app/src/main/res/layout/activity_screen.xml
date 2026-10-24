@@ -58,7 +58,32 @@
             android:paddingEnd="16dp"
             android:paddingBottom="16dp"
             android:visibility="gone" />
+
+        <!-- Só nas quatro telas principais (Início, Churrascos, Amigos, Perfil). -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/menu_bottom_navigation" />
     </LinearLayout>
+
+    <!-- Botão flutuante de criar churrasco: aparece no Início e na aba Churrascos. -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/space_16"
+        android:text="@string/fab_new_event"
+        android:textAppearance="@style/TextAppearance.MandaChurras.BodyStrong"
+        android:textColor="@color/on_brasa"
+        android:visibility="gone"
+        app:backgroundTint="@color/brasa"
+        app:icon="@drawable/ic_plus"
+        app:iconTint="@color/on_brasa"
+        app:shapeAppearanceOverlay="@style/Shape.MandaChurras.Pill" />
 
     <FrameLayout
         android:id="@+id/connectionStateOverlay"

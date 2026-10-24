@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ids das telas montadas em código, usados pelos testes de ponta a ponta. -->
+    <item name="btnCreateChurrasco" type="id" />
+    <item name="btnReviewLegacyMain" type="id" />
+    <item name="btnSwitchUser" type="id" />
+    <item name="txtGreeting" type="id" />
+</resources>

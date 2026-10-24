@@ -23,6 +23,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
 import com.longynus.churrasco.data.ApiError
@@ -48,16 +50,19 @@ import com.longynus.churrasco.ui.banner
 import com.longynus.churrasco.ui.buttonRow
 import com.longynus.churrasco.ui.card
 import com.longynus.churrasco.ui.categoryBadge
+import com.longynus.churrasco.ui.countdown
 import com.longynus.churrasco.ui.dp
 import com.longynus.churrasco.ui.iconBadge
 import com.longynus.churrasco.ui.primaryButton
 import com.longynus.churrasco.ui.row
 import com.longynus.churrasco.ui.secondaryButton
 import com.longynus.churrasco.ui.section
+import com.longynus.churrasco.ui.tabs
 import com.longynus.churrasco.ui.text
 import com.longynus.churrasco.ui.textButton
 import com.longynus.churrasco.ui.textField
 import com.longynus.churrasco.ui.visible
+import com.longynus.churrasco.ui.whenLine
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
@@ -80,11 +85,23 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         private const val HOUR = 3_600_000L
     }
 
+    /** As abas da tela; Contas, Chat e Mapa só para quem vai. */
+    private enum class Tab(val label: Int, val membersOnly: Boolean) {
+        Summary(R.string.tab_summary, false), Items(R.string.tab_items, false), Costs(R.string.tab_costs, true),
+        Chat(R.string.tab_chat, true), Map(R.string.tab_map, true),
+    }
+
     private val vm: EventDetailsViewModel by viewModels()
     private lateinit var churrascoId: String
     private val myUid by lazy { AuthSession.uid(this) }
 
     private lateinit var headerSection: LinearLayout
+    private lateinit var tabsSection: LinearLayout
+    private lateinit var whereSection: LinearLayout
+    private var tab = Tab.Summary
+    private var availableTabs: List<Tab> = emptyList()
+    private var markTab: ((Int) -> Unit)? = null
+    private var chatInput: com.google.android.material.textfield.TextInputEditText? = null
     private lateinit var statusSection: LinearLayout
     private lateinit var peopleSection: LinearLayout
     private lateinit var itemsSection: LinearLayout
@@ -116,11 +133,11 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
             // Política de uso dos mapas do OpenStreetMap: identificar o app.
             userAgentValue = "Churrasco/${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})"
         }
-        setupScreen(getString(R.string.details_event_title), onRefresh = vm::refresh)
+        setupScreen(getString(R.string.details_event_title), onRefresh = { val job = vm.refresh(); lifecycleScope.launch { job?.join(); stopRefreshing() } })
         buildSkeleton()
 
         collect(vm.event) { it?.let(::bindEvent) }
-        collect(vm.balance) { bindCosts(vm.event.value, it) }
+        collect(vm.balance) { bindCosts(vm.event.value, it); bindBottom() }
         collect(vm.messages) { bindMessages(it) }
         collect(vm.locations) { bindLocations(it) }
         collect(vm.loading) { if (it) root.showLoading() else root.hideLoading() }
@@ -148,7 +165,9 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
 
     private fun buildSkeleton() = render {
         headerSection = holder()
+        tabsSection = holder()
         statusSection = holder()
+        whereSection = holder()
         adminSection = holder()
         peopleSection = holder()
         itemsSection = holder()
@@ -157,11 +176,14 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         chatSection = holder().apply { visible(false) }
 
         mapSection.apply {
-            section(getString(R.string.map_title), getString(R.string.map_subtitle))
+            section(getString(R.string.map_title), getString(R.string.map_subtitle), top = 24)
             card(top = 12) {
                 mapView = MapView(context).apply {
                     setTileSource(TileSourceFactory.MAPNIK)
                     setMultiTouchControls(true)
+                    isHorizontalMapRepetitionEnabled = false
+                    isVerticalMapRepetitionEnabled = false
+                    minZoomLevel = 3.0
                     controller.setZoom(4.0)
                     controller.setCenter(GeoPoint(-14.235, -51.925))
                     // Dentro de um ScrollView: o mapa fica com os gestos enquanto o dedo está nele.
@@ -169,8 +191,9 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
                 }
                 addView(FrameLayout(context).apply {
                     clipToOutline = true
-                    setBackgroundResource(R.drawable.bg_create_chip)
-                    addView(mapView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, context.dp(240)))
+                    setBackgroundResource(R.drawable.bg_create_section)
+                    // O mapa ocupa boa parte da tela: a aba Mapa existe para ele.
+                    addView(mapView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, (resources.displayMetrics.heightPixels * 0.5).toInt()))
                 })
                 mapStatus = text("", TextRole.Caption, top = 12)
                 shareLocationButton = primaryButton(getString(R.string.map_share), icon = R.drawable.ic_navigation_arrow) { toggleSharing() }
@@ -178,18 +201,82 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         }
 
         chatSection.apply {
-            section(getString(R.string.details_chat_title), getString(R.string.chat_subtitle))
+            section(getString(R.string.details_chat_title), getString(R.string.chat_subtitle), top = 24)
             card(top = 12) {
                 messagesBox = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
                 addView(messagesBox)
-                val input = textField(getString(R.string.details_chat_hint), maxLength = 500, top = 16)
-                primaryButton(getString(R.string.cd_send_message), icon = R.drawable.ic_paper_plane_right) {
-                    val text = input.text.toString().trim()
-                    if (text.isEmpty()) return@primaryButton
-                    call({ ChurrascoRepository.sendMessage(churrascoId, text) }, silent = true) { input.text?.clear() }
-                }
             }
         }
+    }
+
+    /** Troca de aba: mostra as seções dela e a ação fixa certa no rodapé. */
+    private fun showTab(next: Tab) {
+        tab = next
+        markTab?.invoke(availableTabs.indexOf(next))
+        val sections = mapOf(
+            Tab.Summary to listOf(statusSection, whereSection, peopleSection, adminSection),
+            Tab.Items to listOf(itemsSection), Tab.Costs to listOf(costsSection),
+            Tab.Chat to listOf(chatSection), Tab.Map to listOf(mapSection),
+        )
+        sections.forEach { (t, views) -> views.forEach { it.visible(t == next) } }
+        bindBottom()
+        scroll.post { if (next == Tab.Chat) scroll.fullScroll(View.FOCUS_DOWN) else scroll.scrollTo(0, 0) }
+        if (next == Tab.Map && ::mapView.isInitialized) mapView.invalidate()
+    }
+
+    private fun bindTabs(event: Event) = tabsSection.apply {
+        removeAllViews()
+        val available = Tab.values().filter { !it.membersOnly || event.isMember }
+        if (tab !in available) tab = Tab.Summary
+        availableTabs = available
+        markTab = tabs(available.map { getString(it.label) }, available.indexOf(tab)) { showTab(available[it]) }
+    }
+
+    /**
+     * A ação principal fica presa no rodapé e muda com o seu estado: responder o convite,
+     * pagar a sua parte, escolher o que levar ou chamar a galera. Na aba Chat, é o campo de mensagem.
+     */
+    private fun bindBottom() {
+        val event = vm.event.value ?: return setBottom(null)
+        if (tab == Tab.Chat) {
+            if (chatInput?.isAttachedToWindow != true) setBottom { chatBar() }
+            return
+        }
+        chatInput = null
+        if (tab == Tab.Map) return setBottom(null)
+        val owe = vm.balance.value?.transfers?.firstOrNull { it.from.uid == myUid && !it.to.pixKey.isNullOrBlank() }
+        when {
+            event.myStatus == "invited" -> setBottom {
+                primaryButton(getString(R.string.status_accept), top = 0) { openContributions() }
+                textButton(getString(R.string.status_decline), top = 4) { decline(event) }
+            }
+            event.myStatus == "declined" -> setBottom { primaryButton(getString(R.string.status_changed_mind), top = 0) { openContributions() } }
+            owe != null && tab != Tab.Costs -> setBottom {
+                primaryButton(getString(R.string.sticky_pay, Money.format(owe.amountCents)), top = 0, icon = R.drawable.ic_pix_logo) { showPix(owe, owe.to.pixKey!!) }
+            }
+            event.isMember && event.contributionsOf(myUid).isEmpty() && tab != Tab.Items -> setBottom {
+                primaryButton(getString(R.string.hero_action_items), top = 0, icon = R.drawable.ic_list_checks) { openContributions() }
+            }
+            event.isOrganizer && event.confirmed.isEmpty() -> setBottom {
+                primaryButton(getString(R.string.sticky_call_friends), top = 0, icon = R.drawable.ic_share_network) { shareInvite(event) }
+            }
+            else -> setBottom(null)
+        }
+    }
+
+    /** Campo de mensagem preso no rodapé da aba Chat; o texto digitado sobrevive às atualizações. */
+    private fun LinearLayout.chatBar() {
+        val typed = chatInput?.text?.toString().orEmpty()
+        val line = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        addView(line)
+        val input = line.textField(getString(R.string.details_chat_hint), typed, maxLength = 500, top = 0)
+        (input.parent.parent as View).layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        chatInput = input
+        line.primaryButton(getString(R.string.cd_send_message), top = 0, icon = R.drawable.ic_paper_plane_right) {
+            val text = input.text.toString().trim()
+            if (text.isEmpty()) return@primaryButton
+            call({ ChurrascoRepository.sendMessage(churrascoId, text) }, silent = true) { input.text?.clear() }
+        }.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { marginStart = context.dp(8) }
     }
 
     private fun LinearLayout.holder(): LinearLayout =
@@ -201,13 +288,13 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         stopRefreshing()
         setTitleText(if (event.myStatus == "invited") getString(R.string.details_invite_title) else getString(R.string.details_event_title))
         bindHeader(event)
+        bindTabs(event)
         bindStatus(event)
         bindAdmin(event)
         bindPeople(event)
         bindItems(event)
         bindCosts(event, vm.balance.value)
-        mapSection.visible(event.isMember)
-        chatSection.visible(event.isMember)
+        showTab(tab)
         bindSharingState()
         ReminderScheduler.sync(this, listOf(event))
 
@@ -226,9 +313,16 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
 
     private fun bindHeader(event: Event) = headerSection.apply {
         removeAllViews()
-        text(getString(R.string.details_heading, event.organizer.displayName), TextRole.Title)
+        text(getString(R.string.details_heading, event.organizer.displayName), TextRole.Caption).setTextColor(getColor(R.color.brasa_strong))
+        text(event.local, TextRole.Title, top = 4)
+        text(countdown(event), TextRole.Muted, top = 4)
+        bindWhere(event)
+    }
+
+    private fun bindWhere(event: Event) = whereSection.apply {
+        removeAllViews()
         card(top = 16) {
-            row(context.iconBadge(R.drawable.ic_calendar_blank), whenText(event), getString(R.string.details_timezone), top = 0)
+            row(context.iconBadge(R.drawable.ic_calendar_blank), event.whenLine(), getString(R.string.details_timezone), top = 0)
             row(context.iconBadge(R.drawable.ic_map_pin), event.local, event.address.ifBlank { null })
             val query = event.address.ifBlank { event.local }
             buttonRow(top = 16) {
@@ -241,13 +335,8 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
     private fun bindStatus(event: Event) = statusSection.apply {
         removeAllViews()
         when (event.myStatus) {
-            "invited" -> banner(getString(R.string.status_invited_title), getString(R.string.status_invited_body), Tone.Warning, top = 16).apply {
-                primaryButton(getString(R.string.status_accept)) { openContributions() }
-                secondaryButton(getString(R.string.status_decline)) { decline(event) }
-            }
-            "declined" -> banner(getString(R.string.status_declined_title), getString(R.string.status_declined_body), Tone.Error, top = 16).apply {
-                primaryButton(getString(R.string.status_changed_mind)) { openContributions() }
-            }
+            "invited" -> banner(getString(R.string.status_invited_title), getString(R.string.status_invited_body), Tone.Warning, top = 16)
+            "declined" -> banner(getString(R.string.status_declined_title), getString(R.string.status_declined_body), Tone.Error, top = 16)
             "confirmed" -> banner(getString(R.string.status_confirmed_title), getString(R.string.status_confirmed_body), Tone.Success, top = 16).apply {
                 secondaryButton(getString(R.string.status_change_items)) { openContributions() }
                 textButton(getString(R.string.status_cancel_presence), danger = true) { decline(event) }
@@ -276,7 +365,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
     private fun bindPeople(event: Event) = peopleSection.apply {
         removeAllViews()
         val going = 1 + event.confirmed.size
-        section(getString(R.string.people_title, going), getString(R.string.people_subtitle, event.pending.size, event.declined.size))
+        section(getString(R.string.people_title, going), getString(R.string.people_subtitle, event.pending.size, event.declined.size), top = 24)
         card(top = 12) {
             row(context.avatar(event.organizer.displayName, event.organizer.uid), event.organizer.displayName, getString(R.string.people_organizer), top = 0)
             event.confirmed.forEach { row(context.avatar(it.displayName, it.uid), it.displayName, getString(R.string.people_confirmed)) }
@@ -287,7 +376,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
 
     private fun bindItems(event: Event) = itemsSection.apply {
         removeAllViews()
-        section(getString(R.string.items_who_brings), getString(R.string.items_who_brings_subtitle))
+        section(getString(R.string.items_who_brings), getString(R.string.items_who_brings_subtitle), top = 24)
         if (event.contributions.isEmpty()) {
             card(top = 12, background = R.drawable.bg_empty_state) {
                 text(getString(R.string.items_nobody_yet), TextRole.Muted).gravity = Gravity.CENTER
@@ -313,7 +402,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         costsSection.removeAllViews()
         if (event == null || !event.isMember) return
         costsSection.apply {
-            section(getString(R.string.costs_title), getString(R.string.costs_subtitle))
+            section(getString(R.string.costs_title), getString(R.string.costs_subtitle), top = 24)
             card(top = 12) {
                 if (balance == null || balance.totalCents == 0L) {
                     text(getString(R.string.costs_empty), TextRole.Muted)
@@ -561,7 +650,7 @@ class ActiveChurrascoDetailsActivity : ScreenActivity() {
         call({ ChurrascoRepository.cancelEvent(churrascoId) }) {
             ReminderScheduler.refresh(this)
             toast(getString(R.string.cancel_event_done))
-            startActivity(Intent(this, ActiveChurrascosActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
+            startActivity(Intent(this, EventsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP))
             finish()
         }
     }

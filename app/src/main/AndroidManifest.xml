@@ -41,17 +41,8 @@
             android:exported="false"
             android:launchMode="singleTop" />
         <activity
-            android:name=".ActiveChurrascosActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
-        <activity
-            android:name=".PastChurrascosActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
-        <activity
-            android:name=".PendingInvitesActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
+            android:name=".EventsActivity"
+            android:exported="false" />
         <activity
             android:name=".ActiveChurrascoDetailsActivity"
             android:exported="false"

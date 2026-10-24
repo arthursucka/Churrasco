@@ -24,7 +24,7 @@ class FriendsActivity : ScreenActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setupScreen(getString(R.string.friends_title), onRefresh = ::load)
+        setupScreen(getString(R.string.friends_title), onRefresh = ::load, navItem = R.id.nav_friends)
         draw()
         load()
     }

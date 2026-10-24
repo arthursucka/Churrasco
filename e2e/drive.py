@@ -1,4 +1,4 @@
-"""Teste de ponta a ponta do Churrasco 2.0 (build localTest) num emulador Android.
+"""Teste de ponta a ponta do Manda Churras (build localTest) num emulador Android.
 
 Precisa de: emuladores do Firebase (auth 9099, database 9000, projeto demo-churrasco),
 MongoDB de teste (npm run mongo), backend em CHURRASCO_LOCAL_TEST=1 na porta 3000 e um
@@ -37,7 +37,7 @@ def sign_in_in_app(email, password="teste-local-123"):
 
 def sign_out_in_app():
     adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
-    wait_for(rid="btnSwitchUser", timeout=30)
+    tap(wait_for(rid="nav_profile", timeout=40))
     tap(scroll_to(rid="btnSwitchUser"))
     tap(wait_for(text="Sair"))
     wait_for(rid="btnSignIn", timeout=30)
@@ -45,7 +45,7 @@ def sign_out_in_app():
 
 def open_active_event(place):
     adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
-    tap(wait_for(rid="btnActiveChurrascos", timeout=40))
+    tap(wait_for(rid="nav_events", timeout=40))
     tap(wait_for(contains=place, timeout=40))
     return wait_for(contains="Churrasco de", timeout=40) is not None
 
@@ -89,11 +89,13 @@ def main():
     check("abre o churrasco pela lista de ativos", open_active_event("Casa do teste"))
     check("botões de Maps e Waze", find(contains="Maps") is not None and find(contains="Waze") is not None)
     shot("02-detalhes")
+    tap_text("Itens")
     check("duas pessoas levam carne bovina", scroll_to(contains="Picanha") is not None and scroll_to(contains="Fraldinha") is not None)
     check("item \"Outro\" aparece com o texto livre", scroll_to(contains="Farofa da vó") is not None)
     shot("03-itens")
 
     # 4. Contas e Pix: total 360, 120 para cada; o organizador deve 120 ao Gui
+    tap_text("Contas")
     check("mostra quanto o organizador deve", scroll_to(contains="Você manda R$ 120,00 para Gui") is not None, screen_text()[:300])
     tap_text("Pagar com Pix")
     check("Pix mostra a chave de quem recebe", wait_for(contains="Chave: gui@pix.com", timeout=15) is not None)
@@ -102,6 +104,7 @@ def main():
     time.sleep(3)  # diálogo fechando e aviso de "copiado"
 
     # 5. Itens do organizador pela tela de itens
+    tap_text("Resumo")
     tap_text("O que eu já garanto")
     check("tela de itens abre", wait_for(contains="O que você vai levar?", timeout=30) is not None)
     tap(scroll_to(contains="Carvão"))
@@ -113,6 +116,7 @@ def main():
     check("itens do organizador salvos com quantidade", any(c["category"] == "Carvão" and c["details"].get("quantidade") == "5 kg" for c in mine), str(mine))
 
     # 6. Despesa pelo app
+    tap_text("Contas")
     tap_text("Lançar despesa")
     check("diálogo de despesa abre", wait_for(text="Salvar", timeout=20) is not None, screen_text()[:200])
     description, amount = edit_texts()[:2]  # o diálogo tem só esses dois campos, nessa ordem
@@ -124,15 +128,17 @@ def main():
     check("despesa lançada pelo app", any(x["uid"] == org_uid and x["amountCents"] == 4500 for x in expenses), str(expenses))
 
     # 7. Chat (regras do banco exigem login e participação)
+    tap_text("Chat")
     check("chat mostra a mensagem do convidado", scroll_to(contains="Levo o gelo!") is not None)
     fill(field("Digite uma mensagem"), "Fechado, ate mais tarde")
-    tap(scroll_to(text="Enviar"))
+    tap(wait_for(text="Enviar", timeout=20))  # fica preso no rodapé, acima do teclado
     time.sleep(3)
     messages = list((db_get(f"churrascos/{eid}/messages") or {}).values())
     check("mensagem do app chega com o UID", any(m.get("senderUid") == org_uid and m["text"] == "Fechado, ate mais tarde" for m in messages), str(messages))
 
     # 8. Localização continua com a tela bloqueada
     adb("emu", "geo", "fix", "-46.6333", "-23.5505", check=False)
+    tap_text("Mapa")
     tap(scroll_to(text="Estou a caminho"))
     time.sleep(8)
     first = (db_get(f"churrascos/{eid}/locations") or {}).get(org_uid, {})
@@ -157,6 +163,7 @@ def main():
     check("parar remove a localização do servidor", not (db_get(f"churrascos/{eid}/locations") or {}).get(org_uid))
 
     # 9. Edição pelo organizador
+    tap_text("Resumo")
     tap_text("Editar data, local ou convidados")
     wait_for(contains="Editar churrasco", timeout=30)
     time.sleep(2)  # o formulário carrega os dados do churrasco
@@ -181,7 +188,7 @@ def main():
     date2, hour2 = sao_paulo(60 * 30)
     http("POST", f"{API}/churrascos", {"churrascoDate": date2, "hora": hour2, "local": "Amanha", "address": ""}, org_token)
     adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
-    tap(wait_for(rid="btnActiveChurrascos", timeout=40))
+    tap(wait_for(rid="nav_events", timeout=40))
     wait_for(contains="Amanha", timeout=30)
     time.sleep(2)
     alarms = adb("shell", "dumpsys", "alarm")
@@ -204,7 +211,7 @@ def main():
 
     # 13. Pedido de amizade pela tela de amigos
     adb("shell", "am", "start", "-n", f"{PKG}/.SplashActivity")
-    tap(scroll_to(contains="Amigos"))
+    tap(wait_for(rid="nav_friends", timeout=40))
     fill(field("E-mail"), org_email)
     tap(wait_for(text="Mandar pedido"))
     time.sleep(3)
